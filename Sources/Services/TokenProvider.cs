@@ -18,12 +18,12 @@ namespace ApigeeSDK.Services
 
         private HttpService _httpService;
 
-        public TokenProvider(string authenticationUrl, TimeSpan _httpTimeout, string login, string password)
+        public TokenProvider(ApigeeClientOptions options, HttpService httpService)
         {
-            _authenticationUrl = authenticationUrl;
-            _httpService = new HttpService(_httpTimeout);
-            _login = login;
-            _password = password;
+            _authenticationUrl = options.AuthenticationUrl;
+            _login = options.Email;
+            _password = options.Password;
+            _httpService = httpService;
         }
 
         public async Task<KeyValuePair<string, string>> GetAuthorizationHeader(bool isExpiredByFact)

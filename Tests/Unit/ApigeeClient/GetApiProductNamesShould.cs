@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity;
 
 namespace ApigeeSDK.Unit.Tests
@@ -13,7 +14,7 @@ namespace ApigeeSDK.Unit.Tests
         protected override void Init()
         {
             base.Init();
-            apigeeServiceOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);            
+            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);            
         }
 
         [Test]
@@ -32,7 +33,7 @@ namespace ApigeeSDK.Unit.Tests
                 "name3"
             };
 
-            string url = baseUri + $"/v1/o/{orgName}/apiproducts?count={entitiesLimit}";
+            string url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={entitiesLimit}";
 
             var apigeeService = this.GetInitializedApigeeService(url, json);
 
@@ -45,15 +46,15 @@ namespace ApigeeSDK.Unit.Tests
         }
 
         [Test]
-        public void ReturnEmptyListOfApiProductsNamesForEmptyJson()
+        public async Task ReturnEmptyListOfApiProductsNamesForEmptyJson()
         {
             string json = @"[ ]";
 
-            string url = baseUri + $"/v1/o/{orgName}/apiproducts?count={entitiesLimit}";
+            string url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={entitiesLimit}";
             
-            var apigeeService = this.GetInitializedApigeeService(url, json);
+            var apigeeService = GetInitializedApigeeService(url, json);
 
-            List<string> apiProductNames = apigeeService.GetApiProductNames().Result;
+            List<string> apiProductNames = await apigeeService.GetApiProductNames();
 
             Assert.AreEqual(0, apiProductNames.Count);
         }
@@ -67,12 +68,12 @@ namespace ApigeeSDK.Unit.Tests
             var expectedList = new List<string>() { "name1", "name2", "name3", "name4" };
 
             int testEntitiesLimit = 3;
-            string urlForPortion1 = baseUri + $"/v1/o/{orgName}/apiproducts?count={testEntitiesLimit}";
-            string urlForPortion2 = baseUri + $"/v1/o/{orgName}/apiproducts?count={testEntitiesLimit}&startKey=name3";
+            string urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={testEntitiesLimit}";
+            string urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={testEntitiesLimit}&startKey=name3";
 
             this.RegisterUrlAndJson(urlForPortion1, jsonPortion1);
             this.RegisterUrlAndJson(urlForPortion2, jsonPortion2);
-            apigeeServiceOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
+            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
             var apigeeService = Container.Resolve<ApigeeClient>();
 
             List<string> apiProductNames = apigeeService.GetApiProductNames().Result;
@@ -93,7 +94,7 @@ namespace ApigeeSDK.Unit.Tests
                 ".QuotesToDoubleQuotes();
 
             var apigeeService = this.GetInitializedApigeeService(
-                baseUri + $"/v1/o/{orgName}/apiproducts?count={entitiesLimit}",
+                BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={entitiesLimit}",
                 invalidJson);
 
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>

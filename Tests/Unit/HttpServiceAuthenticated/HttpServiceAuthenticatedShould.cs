@@ -12,79 +12,86 @@ namespace ApigeeSDK.Unit.Tests
 {
     public class HttpServiceAuthenticatedShould
     {
+        private Mock<TokenProvider> _tokenProviderMock;
+        private Mock<HttpService> _httpServiceMock;
         public IUnityContainer Container { get; } = new UnityContainer();
+
+        [SetUp]
+        public void Setup()
+        {
+            _tokenProviderMock = new Mock<TokenProvider>();
+            _tokenProviderMock.Setup(x => x.GetAuthorizationHeader(It.IsAny<bool>())).ReturnsAsync((bool x) =>
+            {
+                string token = x ? "expiredToken" : "validToken";
+                return new KeyValuePair<string, string>("schema", token);
+            });
+
+            _httpServiceMock = new Mock<HttpService>(Timeout.InfiniteTimeSpan);
+
+            Container.RegisterInstance(typeof(TokenProvider), _tokenProviderMock.Object);
+            Container.RegisterInstance(typeof(HttpService), _httpServiceMock.Object);
+
+            Container.RegisterSingleton(typeof(HttpServiceAuthenticated), typeof(HttpServiceAuthenticated));
+        }
+
+        private HttpServiceAuthenticated Sut
+        {
+            get
+            {
+                return Container.Resolve<HttpServiceAuthenticated>();
+            }
+        }
+
         [Test]
         public void SendAdditionalRequestIfTokenExpired()
         {
-            var tokenProviderMock = CreateTokenProvider();
-            var httpServiceMock = new Mock<HttpService>(Timeout.InfiniteTimeSpan);
+            var RESPONSE = "response";
 
-            int numberOfCalls = 0;
-            httpServiceMock.Setup(x
-                => x.GetAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<IEnumerable<KeyValuePair<string, string>>>())).Returns(() =>
+            var numberOfCalls = 0;
+            _httpServiceMock
+                .Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))
+                .Returns(() =>
             {
                 numberOfCalls++;
-                return (numberOfCalls == 1)
-                    ? Task.FromResult((false, HttpStatusCode.Unauthorized, It.IsAny<string>()))
-                    : Task.FromResult((true, HttpStatusCode.Accepted, It.IsAny<string>()));
+
+                if (numberOfCalls == 1)
+                {
+                    throw new ApigeeSDKHttpException(HttpStatusCode.Unauthorized, "Unauthorized");
+                }
+
+                return Task.FromResult(RESPONSE);
             });
-
-            Container.RegisterInstance(typeof(TokenProvider), tokenProviderMock.Object);
-            Container.RegisterInstance(typeof(HttpService), httpServiceMock.Object);
-            Container.RegisterType(typeof(HttpServiceAuthenticated), typeof(HttpServiceAuthenticated));
-
-            var httpServiceAuthenticated = Container.Resolve<HttpServiceAuthenticated>();
-
-
-
-            var response = httpServiceAuthenticated.GetAsync(It.IsAny<string>(),
+                       
+            var response = Sut.GetAsync(It.IsAny<string>(),
                 It.IsAny<IEnumerable<KeyValuePair<string, string>>>()).Result;
 
-            httpServiceMock.Verify(x =>
+            Assert.AreEqual(RESPONSE, response);
+
+            _httpServiceMock.Verify(x =>
                 x.GetAsync(
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<KeyValuePair<string, string>>>()),
                 Times.Exactly(2));
-            tokenProviderMock.Verify(x => x.GetAuthorizationHeader(false), Times.Once);
-            tokenProviderMock.Verify(x => x.GetAuthorizationHeader(true), Times.Once);
+            _tokenProviderMock.Verify(x => x.GetAuthorizationHeader(false), Times.Once);
+            _tokenProviderMock.Verify(x => x.GetAuthorizationHeader(true), Times.Once);
         }
 
         [Test]
         public void RethrowWebExceptionIfBadWebResponse()
         {
-            var tokenProviderMock = CreateTokenProvider();
-            var httpServiceMock = new Mock<HttpService>(Timeout.InfiniteTimeSpan);
-
-            httpServiceMock.Setup(x
+            _httpServiceMock.Setup(x
                     => x.GetAsync(
                         It.IsAny<string>(),
                         It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))
-                .Returns(Task.FromResult((false, HttpStatusCode.BadRequest, It.IsAny<string>())));
+                .Callback(()=>
+                {
+                    throw new ApigeeSDKHttpException(HttpStatusCode.BadRequest, "Bad request");
+                });
 
-
-            Container.RegisterInstance(typeof(TokenProvider), tokenProviderMock.Object);
-            Container.RegisterInstance(typeof(HttpService), httpServiceMock.Object);
-            Container.RegisterType(typeof(HttpServiceAuthenticated), typeof(HttpServiceAuthenticated));
-
-            var httpServiceAuthenticated = Container.Resolve<HttpServiceAuthenticated>();
-
-            Assert.ThrowsAsync<ApigeeSDKHttpException>(async () => await httpServiceAuthenticated.GetAsync(
+            Assert.ThrowsAsync<ApigeeSDKHttpException>(async () => await Sut.GetAsync(
                 It.IsAny<string>(),
                 It.IsAny<IEnumerable<KeyValuePair<string, string>>>())
             );
-        }
-
-        private Mock<TokenProvider> CreateTokenProvider()
-        {
-            var tokenMock = new Mock<TokenProvider>();
-            tokenMock.Setup(x => x.GetAuthorizationHeader(It.IsAny<bool>())).ReturnsAsync((bool x) =>
-            {
-                string token = x ? "expiredToken" : "validToken";
-                return new KeyValuePair<string, string>("schema", token);
-            });
-            return tokenMock;
         }
     }
 }

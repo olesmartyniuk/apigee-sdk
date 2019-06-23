@@ -15,7 +15,7 @@ namespace ApigeeSDK.Unit.Tests
         protected override void Init()
         {
             base.Init();
-            apigeeServiceOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);
+            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);
         }
 
         [Test]
@@ -149,7 +149,7 @@ namespace ApigeeSDK.Unit.Tests
                             }";
 
 
-            string url = baseUri + $"/v1/o/{orgName}/apps?expand=true&rows={entitiesLimit}";
+            string url = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={entitiesLimit}";
 
             var apigeeService = this.GetInitializedApigeeService(url, json);
 
@@ -204,7 +204,7 @@ namespace ApigeeSDK.Unit.Tests
         {
             string emptyJson = @"{ ""app"": [ ] }";
 
-            string url = baseUri + $"/v1/o/{orgName}/apps?expand=true&rows={entitiesLimit}";
+            string url = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={entitiesLimit}";
 
             var apigeeService = this.GetInitializedApigeeService(url, emptyJson);
 
@@ -246,13 +246,13 @@ namespace ApigeeSDK.Unit.Tests
             ]
                             }";
             int testEntitiesLimit = 3;
-            string urlForPortion1 = baseUri + $"/v1/o/{orgName}/apps?expand=true&rows={testEntitiesLimit}";
-            string urlForPortion2 = baseUri + $"/v1/o/{orgName}/apps?expand=true&rows={testEntitiesLimit}&startKey=33333333-3333-3333-3333-333333333333";
+            string urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={testEntitiesLimit}";
+            string urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={testEntitiesLimit}&startKey=33333333-3333-3333-3333-333333333333";
 
             this.RegisterUrlAndJson(urlForPortion1, jsonPortion1);
             this.RegisterUrlAndJson(urlForPortion2, jsonPortion2);
 
-            apigeeServiceOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
+            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
             var apigeeService = Container.Resolve<ApigeeClient>();
 
             List<Application> applications = apigeeService.GetApplications().Result;
@@ -283,7 +283,7 @@ namespace ApigeeSDK.Unit.Tests
 
             var apigeeService =
                 this.GetInitializedApigeeService(
-                    baseUri + $"/v1/o/{orgName}/apps?expand=true&rows={entitiesLimit}", invalidJson);
+                    BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={entitiesLimit}", invalidJson);
 
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
                 await apigeeService.GetApplications());

@@ -59,7 +59,7 @@ namespace ApigeeSDK.Unit.Tests
                 Name = "Maps Feature Info"
             };
 
-            string url = baseUri + $"/v1/organizations/{orgName}/apiproducts/{apiProductName}";
+            string url = BaseUrl + $"/v1/organizations/{OrgName}/apiproducts/{apiProductName}";
 
 
             var apigeeService = this.GetInitializedApigeeService(url, json);
@@ -87,7 +87,7 @@ namespace ApigeeSDK.Unit.Tests
             string apiProductName = "some product name";
 
             var apigeeService = this.GetInitializedApigeeService(
-                baseUri + $"/v1/organizations/{orgName}/apiproducts/{apiProductName}", invalidJson);
+                BaseUrl + $"/v1/organizations/{OrgName}/apiproducts/{apiProductName}", invalidJson);
 
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
                 await apigeeService.GetApiProduct(apiProductName));

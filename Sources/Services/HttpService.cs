@@ -15,9 +15,9 @@ namespace ApigeeSDK.Services
     {
         private TimeSpan _requestTimeOut = Timeout.InfiniteTimeSpan;
 
-        public HttpService(TimeSpan requestTimeOut)
+        public HttpService(ApigeeClientOptions options)
         {
-            _requestTimeOut = requestTimeOut;
+            _requestTimeOut = options.HttpTimeout;
         }
 
         public virtual async Task<string> PostAsync(string url,

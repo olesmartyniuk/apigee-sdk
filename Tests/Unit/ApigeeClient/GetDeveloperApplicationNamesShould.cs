@@ -13,7 +13,7 @@ namespace ApigeeSDK.Unit.Tests
         protected override void Init()
         {
             base.Init();
-            apigeeServiceOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);
+            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);
         }
 
         [Test]
@@ -34,7 +34,7 @@ namespace ApigeeSDK.Unit.Tests
 
 
             string developerEmail = "developerEmail@email.com";
-            string url = baseUri + $"/v1/o/{orgName}/developers/{developerEmail}/apps?count={entitiesLimit}";
+            string url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={entitiesLimit}";
 
             var apigeeService = this.GetInitializedApigeeService(url, json);
 
@@ -53,7 +53,7 @@ namespace ApigeeSDK.Unit.Tests
             string json = @"[]";
 
             string developerEmail = "developerEmail@email.com";
-            string url = baseUri + $"/v1/o/{orgName}/developers/{developerEmail}/apps?count={entitiesLimit}";
+            string url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={entitiesLimit}";
 
             var apigeeService = this.GetInitializedApigeeService(url, json);
 
@@ -78,12 +78,12 @@ namespace ApigeeSDK.Unit.Tests
 
             string developerEmail = "developerEmail@email.com";
             int testEntitiesLimit = 3;
-            string urlForPortion1 = baseUri + $"/v1/o/{orgName}/developers/{developerEmail}/apps?count={testEntitiesLimit}";
-            string urlForPortion2 = baseUri + $"/v1/o/{orgName}/developers/{developerEmail}/apps?count={testEntitiesLimit}&startKey=name3";
+            string urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={testEntitiesLimit}";
+            string urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={testEntitiesLimit}&startKey=name3";
 
             this.RegisterUrlAndJson(urlForPortion1, jsonPortion1);
             this.RegisterUrlAndJson(urlForPortion2, jsonPortion2);
-            apigeeServiceOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
+            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
             var apigeeService = Container.Resolve<ApigeeClient>();
 
             List<string> applicationNames =
@@ -107,8 +107,8 @@ namespace ApigeeSDK.Unit.Tests
             string developerEmail = "developerEmail@email.com";
 
             var apigeeService = this.GetInitializedApigeeService(
-                baseUri +
-                $"/v1/o/{orgName}/developers/{developerEmail}/apps?count={entitiesLimit}",
+                BaseUrl +
+                $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={entitiesLimit}",
                 invalidJson);
 
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>

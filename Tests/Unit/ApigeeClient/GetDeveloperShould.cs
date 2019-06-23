@@ -53,7 +53,7 @@ namespace ApigeeSDK.Unit.Tests
                 LastName = "LName"
             };
 
-            string url = baseUri + $"/v1/o/{orgName}/developers/{developerEmail}";
+            string url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}";
 
 
             var apigeeService = this.GetInitializedApigeeService(url, json);
@@ -79,7 +79,7 @@ namespace ApigeeSDK.Unit.Tests
             Guid applicationId = new Guid("44444444-4444-4444-4444-444444444444");
             string developerEmail = "developerEmail@email.com";
 
-            var apigeeService = this.GetInitializedApigeeService(baseUri + $"/v1/o/{orgName}/developers/{developerEmail}", invalidJson);
+            var apigeeService = this.GetInitializedApigeeService(BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}", invalidJson);
 
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
                 await apigeeService.GetDeveloper(developerEmail));

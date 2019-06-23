@@ -86,7 +86,7 @@ namespace ApigeeSDK.Unit.Tests
                 Name = applicationName
             };
 
-            string url = baseUri + $"/v1/o/{orgName}/developers/{developerEmail}/apps/{applicationName}";
+            string url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps/{applicationName}";
 
 
             var apigeeService = this.GetInitializedApigeeService(url, json);
@@ -117,7 +117,7 @@ namespace ApigeeSDK.Unit.Tests
             string applicationName = "cg-test";
 
             var apigeeService = this.GetInitializedApigeeService(
-                baseUri + $"/v1/o/{orgName}/developers/{developerEmail}/apps/{applicationName}", invalidJson);
+                BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps/{applicationName}", invalidJson);
 
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
                 await apigeeService.GetApplication(developerEmail, applicationName));

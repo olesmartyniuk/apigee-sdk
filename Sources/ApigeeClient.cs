@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Unity;
 using ApigeeSDK.Models;
 using ApigeeSDK.Services;
 using ApigeeSDK.Exceptions;
@@ -20,18 +21,30 @@ namespace ApigeeSDK
 
         private HttpServiceAuthenticated _httpService;
 
-        private string BaseUrlWithOrg => _baseUrl + $"/v1/o/{_organizationName}";        
+        private string BaseUrlWithOrg => _baseUrl + $"/v1/o/{_organizationName}";
 
-        public ApigeeClient(ApigeeClientOptions options)
+        public static ApigeeClient Create(ApigeeClientOptions options)
+        {
+            using (var container = new UnityContainer())
+            {
+                container.RegisterInstance(options);
+                container.RegisterType<HttpService>();
+                container.RegisterType<TokenProvider>();
+                container.RegisterType<HttpServiceAuthenticated>();
+                container.RegisterType<ApigeeClient>();
+
+                return container.Resolve<ApigeeClient>();
+            }
+        }
+
+        public ApigeeClient(ApigeeClientOptions options, HttpServiceAuthenticated httpService)
         {
             _organizationName = options.OrgName;
             _environmentName = options.EnvName;
             _baseUrl = options.BaseUrl;
             _authenticationUrl = options.AuthenticationUrl;
             _entitiesLimit = options.EntitiesLimit;
-            
-            var tokenProvider = new TokenProvider(_authenticationUrl, options.HttpTimeout, options.Email, options.Password);                
-            _httpService = new HttpServiceAuthenticated(new HttpService(options.HttpTimeout), tokenProvider);                                                
+            _httpService = httpService;                                               
         }
 
         public async Task<List<string>> GetApplicationIds()
@@ -213,7 +226,7 @@ namespace ApigeeSDK
         {
             List<T> all = new List<T>();
             List<T> portion = null;
-            string startKey = "elexander@ukr.net";
+            string startKey = null;
             bool isFull = false;
             do
             {

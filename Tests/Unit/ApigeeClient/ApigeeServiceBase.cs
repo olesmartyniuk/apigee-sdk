@@ -7,55 +7,79 @@ using System.Threading.Tasks;
 using Unity;
 using Unity.Injection;
 using ApigeeSDK.Services;
+using ApigeeSDK.Exceptions;
 
 namespace ApigeeSDK.Unit.Tests
 {
     public class ApigeeClientTestsBase
     {
-        protected const string baseUri = "https://api.enterprise.apigee.com";
+        protected const string BaseUrl = "https://api.enterprise.apigee.com";
+        protected const string Email = "email";
+        protected const string Password = "password";
+        protected const string OrgName = "organization";
+        protected const string EnvName = "test";
+        protected const int RequestTimeOut = 300;
 
-        protected const string email = "email";
-        protected const string password = "password";
-        protected const string orgName = "organization";
-        protected const string envName = "test";
-
-        protected Mock<HttpServiceAuthenticated> httpServiceAuthenticated;
-
-        protected const int requestTimeOut = 300;
-
-        protected Mock<ApigeeClientOptions> apigeeServiceOptionsMock;
+        protected Mock<HttpService> _httpServiceMock;
+        protected Mock<TokenProvider> _tokenProviderMock;
+        protected Mock<HttpServiceAuthenticated> _httpServiceAuthenticatedMock;
+        protected Mock<ApigeeClientOptions> _apigeeClientOptionsMock;
 
         public IUnityContainer Container { get; } = new UnityContainer();
 
         [SetUp]
         protected virtual void Init()
         {
-            apigeeServiceOptionsMock = new Mock<ApigeeClientOptions>(email, password, orgName, envName);
-            apigeeServiceOptionsMock.Setup(x => x.Email)
-                .Returns(email);
-            apigeeServiceOptionsMock.Setup(x => x.Password)
-                .Returns(password);
-            apigeeServiceOptionsMock.Setup(x => x.OrgName)
-                .Returns(orgName);
-            apigeeServiceOptionsMock.Setup(x => x.EnvName)
-                .Returns(envName);
+            _apigeeClientOptionsMock = new Mock<ApigeeClientOptions>(Email, Password, OrgName, EnvName);
+            _apigeeClientOptionsMock.Setup(x => x.Email)
+                .Returns(Email);
+            _apigeeClientOptionsMock.Setup(x => x.Password)
+                .Returns(Password);
+            _apigeeClientOptionsMock.Setup(x => x.OrgName)
+                .Returns(OrgName);
+            _apigeeClientOptionsMock.Setup(x => x.EnvName)
+                .Returns(EnvName);
+            _apigeeClientOptionsMock.Setup(x => x.BaseUrl)
+                .Returns(BaseUrl);
+            Container.RegisterInstance(_apigeeClientOptionsMock.Object);
 
-            httpServiceAuthenticated = new Mock<HttpServiceAuthenticated>(
-                MockBehavior.Strict, 
-                new HttpService(TimeSpan.FromSeconds(requestTimeOut)), new Mock<TokenProvider>().Object);
-            Container.RegisterInstance(typeof(HttpServiceAuthenticated), httpServiceAuthenticated.Object);
-            Container.RegisterInstance(typeof(ApigeeClientOptions), apigeeServiceOptionsMock.Object);
-            Container.RegisterType(typeof(ApigeeClient), typeof(ApigeeClient),
+            _httpServiceMock = new Mock<HttpService>(
+                MockBehavior.Strict,
+                _apigeeClientOptionsMock.Object);
+            Container.RegisterInstance(_httpServiceMock.Object);
+
+            _tokenProviderMock = new Mock<TokenProvider>(
+                MockBehavior.Strict,
+                _apigeeClientOptionsMock.Object,
+                _httpServiceMock.Object);
+            Container.RegisterInstance(_tokenProviderMock.Object);
+
+            _httpServiceAuthenticatedMock = new Mock<HttpServiceAuthenticated>(
+                MockBehavior.Strict, _httpServiceMock.Object, _tokenProviderMock.Object);
+            Container.RegisterInstance(_httpServiceAuthenticatedMock.Object);
+
+            Container.RegisterSingleton(typeof(ApigeeClient), typeof(ApigeeClient),
                 new InjectionConstructor(Container.Resolve<ApigeeClientOptions>(), Container.Resolve<HttpServiceAuthenticated>()));
         }
 
-        protected void RegisterUrlAndJson(string url, string json, HttpStatusCode statusCode = HttpStatusCode.Accepted)
+        protected void RegisterUrlAndJson(string url, string json, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            httpServiceAuthenticated.Setup(x => x.GetAsync(url, It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))
-                .Returns(Task.FromResult((true, statusCode, json)));
+            if (statusCode == HttpStatusCode.OK)
+            {
+                _httpServiceAuthenticatedMock.Setup(x => x.GetAsync(url, It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))
+                    .Returns(Task.FromResult(json));
+            }
+            else
+            {
+                _httpServiceAuthenticatedMock.Setup(x => x.GetAsync(url, It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))
+                    .Callback(() =>
+                    {
+                        throw new ApigeeSDKHttpException(statusCode, statusCode.ToString());
+                    });
+            }
         }
 
-        protected ApigeeClient GetInitializedApigeeService(string url, string json, HttpStatusCode statusCode = HttpStatusCode.Accepted)
+        protected ApigeeClient GetInitializedApigeeService(string url, string json, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             RegisterUrlAndJson(url, json, statusCode);
             return Container.Resolve<ApigeeClient>();
