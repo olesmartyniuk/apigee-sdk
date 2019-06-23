@@ -2,15 +2,16 @@
 using System;
 using SemanticComparison.Fluent;
 using ApigeeSDK.Models;
+using System.Threading.Tasks;
 
 namespace ApigeeSDK.Unit.Tests
 {
     public class GetApplicationByIdShould : ApigeeClientTestsBase
     {
         [Test]
-        public void ReturnApplicationByIdForValidJson()
+        public async Task ReturnApplicationByIdForValidJson()
         {
-            string json = @"{
+            var json = @"{
                               'accessType': 'read',
                               'apiProducts': [],
                               'appFamily': 'default',
@@ -74,12 +75,10 @@ namespace ApigeeSDK.Unit.Tests
                 Name = "my-company-app"
             };
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/apps/{applicationId}";
-
-
-            var apigeeService = this.GetInitializedApigeeService(url, json);
-
-            Application application = apigeeService.GetApplication(expectedApplication.ApplicationId).Result;
+            var url = BaseUrl + $"/v1/o/{OrgName}/apps/{applicationId}";
+            
+            var apigeeService = GetInitializedApigeeService(url, json);
+            var application = await apigeeService.GetApplication(expectedApplication.ApplicationId);
 
             expectedApplication.AsSource().OfLikeness<Application>()
                 .Without(x => x.Attributes)
@@ -99,14 +98,14 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public void ThrowJsonSerializationExceptionForInvalidJson()
         {
-            string invalidJson = @"[
+            var invalidJson = @"[
                     '11111111-1111-1111-1111-111111111
                     '33333333-3333-3333-3333-333333333333'
                 ".QuotesToDoubleQuotes();
 
             var applicationId = "44444444-4444-4444-4444-444444444444";
 
-            var apigeeService = this.GetInitializedApigeeService(BaseUrl + $"/v1/o/{OrgName}/apps/{applicationId}", invalidJson);
+            var apigeeService = GetInitializedApigeeService(BaseUrl + $"/v1/o/{OrgName}/apps/{applicationId}", invalidJson);
 
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
                 await apigeeService.GetApplication(applicationId));

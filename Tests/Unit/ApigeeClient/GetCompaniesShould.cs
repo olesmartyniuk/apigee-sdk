@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using ApigeeSDK.Models;
 using NUnit.Framework;
 using SemanticComparison.Fluent;
@@ -10,7 +11,6 @@ namespace ApigeeSDK.Unit.Tests
     public class GetCompaniesShould : ApigeeClientTestsBase
     {
         private const int entitiesLimit = 1000;
-        private const int statisticsLimit = 14000;
 
         [SetUp]
         protected override void Init()
@@ -20,9 +20,9 @@ namespace ApigeeSDK.Unit.Tests
         }
 
         [Test]
-        public void ReturnListOfCompaniesForValidJson()
+        public async Task ReturnListOfCompaniesForValidJson()
         {
-            string json = @"{
+            var json = @"{
                 ""company"": [
                     {
                         ""name"": ""test-company-1"",
@@ -49,11 +49,10 @@ namespace ApigeeSDK.Unit.Tests
                 ]
             }";
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/companies?expand=true&count={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/companies?expand=true&count={entitiesLimit}";
 
-            var apigeeService = this.GetInitializedApigeeService(url, json);
-
-            var companies = apigeeService.GetCompanies().Result;
+            var apigeeService = GetInitializedApigeeService(url, json);
+            var companies = await apigeeService.GetCompanies();
 
             Assert.AreEqual(2, companies.Count);
 
@@ -87,23 +86,21 @@ namespace ApigeeSDK.Unit.Tests
         }
 
         [Test]
-        public void ReturnEmptyListOfCompaniesForEmptyList()
+        public async Task ReturnEmptyListOfCompaniesForEmptyList()
         {
-            string json = @"{ ""company"": [ ] }";
+            var json = @"{ ""company"": [ ] }";
+            var url = BaseUrl + $"/v1/o/{OrgName}/companies?expand=true&count={entitiesLimit}";
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/companies?expand=true&count={entitiesLimit}";
-
-            var apigeeService = this.GetInitializedApigeeService(url, json, HttpStatusCode.NotFound);
-
-            List<Company> companies = apigeeService.GetCompanies().Result;
+            var apigeeService = GetInitializedApigeeService(url, json);
+            var companies = await apigeeService.GetCompanies();
 
             Assert.AreEqual(0, companies.Count);
         }
 
         [Test]
-        public void ReturnListOfCompaniesByPortions()
+        public async Task ReturnListOfCompaniesByPortions()
         {
-            string jsonPortion1 = @"{
+            var jsonPortion1 = @"{
                 ""company"": [
                     {
                         ""name"": ""company-1"",
@@ -119,7 +116,7 @@ namespace ApigeeSDK.Unit.Tests
                     }
                 ]}";
 
-            string jsonPortion2 = @"{
+            var jsonPortion2 = @"{
                 ""company"": [
                     {
                         ""name"": ""company-3"",
@@ -131,16 +128,16 @@ namespace ApigeeSDK.Unit.Tests
                     }
                 ]}";
 
-            int testEntitiesLimit = 3;
-            string urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/companies?expand=true&count={testEntitiesLimit}";
-            string urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/companies?expand=true&count={testEntitiesLimit}&startKey=company-3";
+            var testEntitiesLimit = 3;
+            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/companies?expand=true&count={testEntitiesLimit}";
+            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/companies?expand=true&count={testEntitiesLimit}&startKey=company-3";
 
-            this.RegisterUrlAndJson(urlForPortion1, jsonPortion1);
-            this.RegisterUrlAndJson(urlForPortion2, jsonPortion2);
+            RegisterUrlAndJson(urlForPortion1, jsonPortion1);
+            RegisterUrlAndJson(urlForPortion2, jsonPortion2);
             _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
-            var apigeeService = Container.Resolve<ApigeeClient>();
 
-            List<Company> companies = apigeeService.GetCompanies().Result;
+            var apigeeService = Container.Resolve<ApigeeClient>();
+            var companies = await apigeeService.GetCompanies();
 
             Assert.AreEqual(4, companies.Count);
 
@@ -160,7 +157,7 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
-            string invalidJson = @"[
+            var invalidJson = @"[
                     'Company 1
                     'Company 3'
                 ".QuotesToDoubleQuotes();

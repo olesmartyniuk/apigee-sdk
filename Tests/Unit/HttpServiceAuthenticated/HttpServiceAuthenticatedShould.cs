@@ -12,24 +12,39 @@ namespace ApigeeSDK.Unit.Tests
 {
     public class HttpServiceAuthenticatedShould
     {
-        private Mock<TokenProvider> _tokenProviderMock;
-        private Mock<HttpService> _httpServiceMock;
+        protected const string Email = "email";
+        protected const string Password = "password";
+        protected const string OrgName = "organization";
+        protected const string EnvName = "test";
+
+        protected Mock<ApigeeClientOptions> _apigeeClientOptionsMock;
+        protected Mock<HttpService> _httpServiceMock;
+        protected Mock<TokenProvider> _tokenProviderMock;
+
         public IUnityContainer Container { get; } = new UnityContainer();
 
         [SetUp]
         public void Setup()
         {
-            _tokenProviderMock = new Mock<TokenProvider>();
+            _apigeeClientOptionsMock = new Mock<ApigeeClientOptions>(Email, Password, OrgName, EnvName);
+            Container.RegisterInstance(_apigeeClientOptionsMock.Object);
+
+            _httpServiceMock = new Mock<HttpService>(
+                MockBehavior.Strict,
+                _apigeeClientOptionsMock.Object);
+            Container.RegisterInstance(_httpServiceMock.Object);
+
+            _tokenProviderMock = new Mock<TokenProvider>(
+                MockBehavior.Strict,
+                _apigeeClientOptionsMock.Object,
+                _httpServiceMock.Object);
+            Container.RegisterInstance(_tokenProviderMock.Object);
+
             _tokenProviderMock.Setup(x => x.GetAuthorizationHeader(It.IsAny<bool>())).ReturnsAsync((bool x) =>
             {
-                string token = x ? "expiredToken" : "validToken";
+                var token = x ? "expiredToken" : "validToken";
                 return new KeyValuePair<string, string>("schema", token);
             });
-
-            _httpServiceMock = new Mock<HttpService>(Timeout.InfiniteTimeSpan);
-
-            Container.RegisterInstance(typeof(TokenProvider), _tokenProviderMock.Object);
-            Container.RegisterInstance(typeof(HttpService), _httpServiceMock.Object);
 
             Container.RegisterSingleton(typeof(HttpServiceAuthenticated), typeof(HttpServiceAuthenticated));
         }
@@ -43,7 +58,7 @@ namespace ApigeeSDK.Unit.Tests
         }
 
         [Test]
-        public void SendAdditionalRequestIfTokenExpired()
+        public async Task SendAdditionalRequestIfTokenExpired()
         {
             var RESPONSE = "response";
 
@@ -62,8 +77,8 @@ namespace ApigeeSDK.Unit.Tests
                 return Task.FromResult(RESPONSE);
             });
                        
-            var response = Sut.GetAsync(It.IsAny<string>(),
-                It.IsAny<IEnumerable<KeyValuePair<string, string>>>()).Result;
+            var response = await Sut.GetAsync(It.IsAny<string>(),
+                It.IsAny<IEnumerable<KeyValuePair<string, string>>>());
 
             Assert.AreEqual(RESPONSE, response);
 
@@ -79,11 +94,8 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public void RethrowWebExceptionIfBadWebResponse()
         {
-            _httpServiceMock.Setup(x
-                    => x.GetAsync(
-                        It.IsAny<string>(),
-                        It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))
-                .Callback(()=>
+            _httpServiceMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))
+                .Callback(() =>
                 {
                     throw new ApigeeSDKHttpException(HttpStatusCode.BadRequest, "Bad request");
                 });

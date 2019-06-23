@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity;
 
 namespace ApigeeSDK.Unit.Tests
@@ -7,7 +8,6 @@ namespace ApigeeSDK.Unit.Tests
     public class GetDeveloperApplicationNamesShould : ApigeeClientTestsBase
     {
         private const int entitiesLimit = 1000;
-        private const int statisticsLimit = 14000;
 
         [SetUp]
         protected override void Init()
@@ -17,9 +17,9 @@ namespace ApigeeSDK.Unit.Tests
         }
 
         [Test]
-        public void ReturnListOfDeveloperApplicationNamesForValidJson()
+        public async Task ReturnListOfDeveloperApplicationNamesForValidJson()
         {
-            string json = @"[
+            var json = @"[
                     'name1',
                     'name2',
                     'name3'
@@ -33,13 +33,11 @@ namespace ApigeeSDK.Unit.Tests
             };
 
 
-            string developerEmail = "developerEmail@email.com";
-            string url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={entitiesLimit}";
+            var developerEmail = "developerEmail@email.com";
+            var url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={entitiesLimit}";
 
-            var apigeeService = this.GetInitializedApigeeService(url, json);
-
-            List<string> applicationNames =
-                apigeeService.GetDeveloperApplicationNames(developerEmail).Result;
+            var apigeeService = GetInitializedApigeeService(url, json);
+            var applicationNames = await apigeeService.GetDeveloperApplicationNames(developerEmail);
 
             Assert.AreEqual(expectedList.Count, applicationNames.Count);
             Assert.AreEqual(expectedList[0], applicationNames[0]);
@@ -48,46 +46,41 @@ namespace ApigeeSDK.Unit.Tests
         }
 
         [Test]
-        public void ReturnEmptyListOfDeveloperApplicationNamesForEmptyJson()
+        public async Task ReturnEmptyListOfDeveloperApplicationNamesForEmptyJson()
         {
-            string json = @"[]";
+            var json = @"[]";
 
-            string developerEmail = "developerEmail@email.com";
-            string url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={entitiesLimit}";
+            var developerEmail = "developerEmail@email.com";
+            var url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={entitiesLimit}";
 
-            var apigeeService = this.GetInitializedApigeeService(url, json);
-
-            List<string> applicationNames =
-                apigeeService.GetDeveloperApplicationNames(developerEmail).Result;
+            var apigeeService = GetInitializedApigeeService(url, json);
+            var applicationNames = await apigeeService.GetDeveloperApplicationNames(developerEmail);
 
             Assert.AreEqual(0, applicationNames.Count);
         }
 
         [Test]
-        public void ReturnListOfDeveloperApplicationNamesByPortions()
+        public async Task ReturnListOfDeveloperApplicationNamesByPortions()
         {
-            string jsonPortion1 = @"['name1', 'name2', 'name3' ]".QuotesToDoubleQuotes();
-            string jsonPortion2 = @"['name3', 'name4' ]".QuotesToDoubleQuotes();
-
-
+            var jsonPortion1 = @"['name1', 'name2', 'name3' ]".QuotesToDoubleQuotes();
+            var jsonPortion2 = @"['name3', 'name4' ]".QuotesToDoubleQuotes();
+            
             var expectedList = new List<string>()
             {
                 "name1", "name2", "name3", "name4"
             };
 
+            var developerEmail = "developerEmail@email.com";
+            var testEntitiesLimit = 3;
+            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={testEntitiesLimit}";
+            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={testEntitiesLimit}&startKey=name3";
 
-            string developerEmail = "developerEmail@email.com";
-            int testEntitiesLimit = 3;
-            string urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={testEntitiesLimit}";
-            string urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={testEntitiesLimit}&startKey=name3";
-
-            this.RegisterUrlAndJson(urlForPortion1, jsonPortion1);
-            this.RegisterUrlAndJson(urlForPortion2, jsonPortion2);
+            RegisterUrlAndJson(urlForPortion1, jsonPortion1);
+            RegisterUrlAndJson(urlForPortion2, jsonPortion2);
             _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
-            var apigeeService = Container.Resolve<ApigeeClient>();
 
-            List<string> applicationNames =
-                apigeeService.GetDeveloperApplicationNames(developerEmail).Result;
+            var apigeeService = Container.Resolve<ApigeeClient>();
+            var applicationNames = await apigeeService.GetDeveloperApplicationNames(developerEmail);
 
             Assert.AreEqual(expectedList.Count, applicationNames.Count);
             Assert.AreEqual(expectedList[0], applicationNames[0]);
@@ -99,14 +92,14 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
-            string invalidJson = @"[
+            var invalidJson = @"[
                     '11111111-1111-1111-1111-111111111
                     '33333333-3333-3333-3333-333333333333'
                 ".QuotesToDoubleQuotes();
 
-            string developerEmail = "developerEmail@email.com";
+            var developerEmail = "developerEmail@email.com";
 
-            var apigeeService = this.GetInitializedApigeeService(
+            var apigeeService = GetInitializedApigeeService(
                 BaseUrl +
                 $"/v1/o/{OrgName}/developers/{developerEmail}/apps?count={entitiesLimit}",
                 invalidJson);

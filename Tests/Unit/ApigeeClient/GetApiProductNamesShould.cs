@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Unity;
 
 namespace ApigeeSDK.Unit.Tests
@@ -8,17 +8,17 @@ namespace ApigeeSDK.Unit.Tests
     class GetApiProductNamesShould : ApigeeClientTestsBase
     {
         private const int entitiesLimit = 1000;
-        private const int statisticsLimit = 14000;
 
         [SetUp]
         protected override void Init()
         {
             base.Init();
+
             _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);            
         }
 
         [Test]
-        public void ReturnListOfApiProductsNamesForValidJson()
+        public async Task ReturnListOfApiProductsNamesForValidJson()
         {
             string json = @"[
                     'name1',
@@ -33,11 +33,11 @@ namespace ApigeeSDK.Unit.Tests
                 "name3"
             };
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={entitiesLimit}";
 
-            var apigeeService = this.GetInitializedApigeeService(url, json);
+            var apigeeService = GetInitializedApigeeService(url, json);
 
-            List<string> apiProductNames = apigeeService.GetApiProductNames().Result;
+            var apiProductNames = await apigeeService.GetApiProductNames();
 
             Assert.AreEqual(expectedList.Count, apiProductNames.Count);
             Assert.AreEqual(expectedList[0], apiProductNames[0]);
@@ -48,9 +48,9 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public async Task ReturnEmptyListOfApiProductsNamesForEmptyJson()
         {
-            string json = @"[ ]";
+            var json = @"[ ]";
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={entitiesLimit}";
             
             var apigeeService = GetInitializedApigeeService(url, json);
 
@@ -60,23 +60,23 @@ namespace ApigeeSDK.Unit.Tests
         }
 
         [Test]
-        public void ReturnListOfApiProductsNamesByPortions()
+        public async Task ReturnListOfApiProductsNamesByPortions()
         {
-            string jsonPortion1 = @"[ 'name1', 'name2', 'name3' ]".QuotesToDoubleQuotes();
-            string jsonPortion2 = @"[ 'name3' , 'name4' ]".QuotesToDoubleQuotes();
+            var jsonPortion1 = @"[ 'name1', 'name2', 'name3' ]".QuotesToDoubleQuotes();
+            var jsonPortion2 = @"[ 'name3' , 'name4' ]".QuotesToDoubleQuotes();
 
             var expectedList = new List<string>() { "name1", "name2", "name3", "name4" };
 
-            int testEntitiesLimit = 3;
-            string urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={testEntitiesLimit}";
-            string urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={testEntitiesLimit}&startKey=name3";
+            var testEntitiesLimit = 3;
+            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={testEntitiesLimit}";
+            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={testEntitiesLimit}&startKey=name3";
 
-            this.RegisterUrlAndJson(urlForPortion1, jsonPortion1);
-            this.RegisterUrlAndJson(urlForPortion2, jsonPortion2);
+            RegisterUrlAndJson(urlForPortion1, jsonPortion1);
+            RegisterUrlAndJson(urlForPortion2, jsonPortion2);
             _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
-            var apigeeService = Container.Resolve<ApigeeClient>();
 
-            List<string> apiProductNames = apigeeService.GetApiProductNames().Result;
+            var apigeeService = Container.Resolve<ApigeeClient>();
+            var apiProductNames = await apigeeService.GetApiProductNames();
 
             Assert.AreEqual(expectedList.Count, apiProductNames.Count);
             Assert.AreEqual(expectedList[0], apiProductNames[0]);
@@ -88,7 +88,7 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
-            string invalidJson = @"[
+            var invalidJson = @"[
                     '11111111-1111-1111-1111-111111111
                     '33333333-3333-3333-3333-333333333333'
                 ".QuotesToDoubleQuotes();

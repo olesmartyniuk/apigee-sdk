@@ -26,7 +26,7 @@ namespace ApigeeSDK.Services
             _httpService = httpService;
         }
 
-        public async Task<KeyValuePair<string, string>> GetAuthorizationHeader(bool isExpiredByFact)
+        public virtual async Task<KeyValuePair<string, string>> GetAuthorizationHeader(bool isExpiredByFact)
         {
             if (isExpiredByFact || !IsTokenValid)
             {

@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using SemanticComparison.Fluent;
 using System;
+using System.Threading.Tasks;
 
 namespace ApigeeSDK.Unit.Tests
 {
@@ -9,44 +10,44 @@ namespace ApigeeSDK.Unit.Tests
     {
 
         [Test]
-        public void ReturnApiProductByNameForValidJson()
+        public async Task ReturnApiProductByNameForValidJson()
         {
-            string json = @"{
-                                ""apiResources"": [
-                                    ""/*/featureinfo/*/*/*/*/*/*.**""
-                                ],
-                                ""approvalType"": ""auto"",
-                                ""attributes"": [
-                                    {
-                                        ""name"": ""MINT_TRANSACTION_SUCCESS_CRITERIA"",
-                                        ""value"": ""txProviderStatus == '200'""
-                                    },
-                                    {
-                                        ""name"": ""access"",
-                                        ""value"": ""public""
-                                    },
-                                    {
-                                        ""name"": ""transactionRecordingPolicies"",
-                                        ""value"": ""[{\""name\"":\""/*/featureinfo/*/*/*/*/*/*.**\"",\""policies\"":{\""request\"":[],\""response\"":[\""{\\\""policyType\\\"":\\\""ExtractVariables\\\"",\\\""async\\\"":false,\\\""continueOnError\\\"":false,\\\""displayName\\\"":\\\""Transaction Policy\\\"",\\\""enabled\\\"":true,\\\""faultRules\\\"":[],\\\""ignoreUnresolvedVariables\\\"":true,\\\""jSONPayload\\\"":{\\\""variable\\\"":[]},\\\""name\\\"":\\\""\\\"",\\\""source\\\"":{\\\""clearPayload\\\"":false,\\\""value\\\"":\\\""response\\\""},\\\""variablePrefix\\\"":\\\""apigee\\\"",\\\""xMLPayload\\\"":{\\\""namespaces\\\"":[],\\\""stopPayloadProcessing\\\"":false,\\\""variable\\\"":[]},\\\""extractions\\\"":[{\\\""Variable\\\"":{\\\""name\\\"":\\\""response.status.code\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.status}\\\""}]}}]}\""]}}]""
-                                    }
-                                ],
-                                ""createdAt"": 1540825200000,
-                                ""createdBy"": ""test2.name@email.com"",
-                                ""description"": ""test description"",
-                                ""displayName"": ""Name to display"",
-                                ""environments"": [],
-                                ""lastModifiedAt"": 1540828800000,
-                                ""lastModifiedBy"": ""test.name@email.com"",
-                                ""name"": ""Maps Feature Info"",
-                                ""proxies"": [
-                                    ""Maps-Online""
-                                ],
-                                ""scopes"": [
-                                    """"
-                                ]
-                            }";
+            var json = @"{
+                        ""apiResources"": [
+                            ""/*/featureinfo/*/*/*/*/*/*.**""
+                        ],
+                        ""approvalType"": ""auto"",
+                        ""attributes"": [
+                            {
+                                ""name"": ""MINT_TRANSACTION_SUCCESS_CRITERIA"",
+                                ""value"": ""txProviderStatus == '200'""
+                            },
+                            {
+                                ""name"": ""access"",
+                                ""value"": ""public""
+                            },
+                            {
+                                ""name"": ""transactionRecordingPolicies"",
+                                ""value"": ""[{\""name\"":\""/*/featureinfo/*/*/*/*/*/*.**\"",\""policies\"":{\""request\"":[],\""response\"":[\""{\\\""policyType\\\"":\\\""ExtractVariables\\\"",\\\""async\\\"":false,\\\""continueOnError\\\"":false,\\\""displayName\\\"":\\\""Transaction Policy\\\"",\\\""enabled\\\"":true,\\\""faultRules\\\"":[],\\\""ignoreUnresolvedVariables\\\"":true,\\\""jSONPayload\\\"":{\\\""variable\\\"":[]},\\\""name\\\"":\\\""\\\"",\\\""source\\\"":{\\\""clearPayload\\\"":false,\\\""value\\\"":\\\""response\\\""},\\\""variablePrefix\\\"":\\\""apigee\\\"",\\\""xMLPayload\\\"":{\\\""namespaces\\\"":[],\\\""stopPayloadProcessing\\\"":false,\\\""variable\\\"":[]},\\\""extractions\\\"":[{\\\""Variable\\\"":{\\\""name\\\"":\\\""response.status.code\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.status}\\\""}]}}]}\""]}}]""
+                            }
+                        ],
+                        ""createdAt"": 1540825200000,
+                        ""createdBy"": ""test2.name@email.com"",
+                        ""description"": ""test description"",
+                        ""displayName"": ""Name to display"",
+                        ""environments"": [],
+                        ""lastModifiedAt"": 1540828800000,
+                        ""lastModifiedBy"": ""test.name@email.com"",
+                        ""name"": ""Maps Feature Info"",
+                        ""proxies"": [
+                            ""Maps-Online""
+                        ],
+                        ""scopes"": [
+                            """"
+                        ]
+                    }";
 
-            string apiProductName = "some product name";
+            var apiProductName = "some product name";
 
             var expectedApiProduct = new ApiProduct()
             {
@@ -59,12 +60,11 @@ namespace ApigeeSDK.Unit.Tests
                 Name = "Maps Feature Info"
             };
 
-            string url = BaseUrl + $"/v1/organizations/{OrgName}/apiproducts/{apiProductName}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts/{apiProductName}";
 
+            var apigeeService = GetInitializedApigeeService(url, json);
 
-            var apigeeService = this.GetInitializedApigeeService(url, json);
-
-            ApiProduct apiProduct = apigeeService.GetApiProduct(apiProductName).Result;
+            var apiProduct = await apigeeService.GetApiProduct(apiProductName);
             
             expectedApiProduct.AsSource().OfLikeness<ApiProduct>()
                 .Without(x => x.Attributes)
@@ -79,15 +79,15 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
-            string invalidJson = @"[
+            var invalidJson = @"[
                     '11111111-1111-1111-1111-111111111
                     '33333333-3333-3333-3333-333333333333'
                 ".QuotesToDoubleQuotes();
 
-            string apiProductName = "some product name";
+            var apiProductName = "some product name";
 
-            var apigeeService = this.GetInitializedApigeeService(
-                BaseUrl + $"/v1/organizations/{OrgName}/apiproducts/{apiProductName}", invalidJson);
+            var apigeeService = GetInitializedApigeeService(
+                BaseUrl + $"/v1/o/{OrgName}/apiproducts/{apiProductName}", invalidJson);
 
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
                 await apigeeService.GetApiProduct(apiProductName));

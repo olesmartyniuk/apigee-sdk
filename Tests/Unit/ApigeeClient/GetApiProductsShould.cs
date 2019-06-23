@@ -3,6 +3,7 @@ using NUnit.Framework;
 using SemanticComparison.Fluent;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity;
 
 namespace ApigeeSDK.Unit.Tests
@@ -10,105 +11,104 @@ namespace ApigeeSDK.Unit.Tests
     class GetApiProductsShould : ApigeeClientTestsBase
     {
         private const int entitiesLimit = 1000;
-        private const int statisticsLimit = 14000;
 
         [SetUp]
         protected override void Init()
         {
             base.Init();
+
             _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);            
         }
 
 
         [Test]
-        public void ReturnListOfApiProductsForValidJson()
+        public async Task ReturnListOfApiProductsForValidJson()
         {
-            string json = @"{
-                              ""apiProduct"": [
-                                {
-                                  ""apiResources"": [
-                                    ""/*/featureinfo/*/*/*/*/*/*.**""
-                                  ],
-                                  ""approvalType"": ""auto"",
-                                  ""attributes"": [
-                                    {
-                                      ""name"": ""MINT_TRANSACTION_SUCCESS_CRITERIA"",
-                                      ""value"": ""txProviderStatus == '200'""
-                                    },
-                                    {
-                                      ""name"": ""access"",
-                                      ""value"": ""public""
-                                    },
-                                    {
-                                      ""name"": ""transactionRecordingPolicies"",
-                                      ""value"": ""[
-                              {\""name\"":\""/*/featureinfo/*/*/*/*/*/*.**\"",\""policies\"":{\""request\"":[],\""response\"":[\""{\\\""policyType\\\"":\\\""ExtractVariables\\\"",\\\""async\\\"":false,\\\""continueOnError\\\"":false,\\\""displayName\\\"":\\\""Transaction Policy\\\"",\\\""enabled\\\"":true,\\\""faultRules\\\"":[],\\\""ignoreUnresolvedVariables\\\"":true,\\\""jSONPayload\\\"":{\\\""variable\\\"":[]},\\\""name\\\"":\\\""\\\"",\\\""source\\\"":{\\\""clearPayload\\\"":false,\\\""value\\\"":\\\""response\\\""},\\\""variablePrefix\\\"":\\\""apigee\\\"",\\\""xMLPayload\\\"":{\\\""namespaces\\\"":[],\\\""stopPayloadProcessing\\\"":false,\\\""variable\\\"":[]},\\\""extractions\\\"":[{\\\""Variable\\\"":{\\\""name\\\"":\\\""response.status.code\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.status}\\\""}]}}]}\""]}}]""
-                                    }
-                                  ],
-                                  ""createdAt"": 1536070064743,
-                                  ""createdBy"": ""jerry.jerry@jerry.com"",
-                                  ""description"": ""some description"",
-                                  ""displayName"": ""name to Display"",
-                                  ""environments"": [],
-                                  ""lastModifiedAt"": 1536070444283,
-                                  ""lastModifiedBy"": ""tom.tom@tom.com"",
-                                  ""name"": ""Some name"",
-                                  ""proxies"": [
-                                    ""Maps-Online""
-                                  ],
-                                  ""scopes"": [
-                                    """"
-                                  ]
-                                },
-                                {
-                                  ""apiResources"": [
-                                    ""/"",
-                                    ""/**""
-                                  ],
-                                  ""approvalType"": ""auto"",
-                                  ""attributes"": [
-                                    {
-                                      ""name"": ""MINT_CUSTOM_ATTRIBUTE_1"",
-                                      ""value"": ""weight""
-                                    },
-                                    {
-                                      ""name"": ""MINT_TRANSACTION_SUCCESS_CRITERIA"",
-                                      ""value"": ""txProviderStatus == 'OK'""
-                                    },
-                                    {
-                                      ""name"": ""transactionRecordingPolicies"",
-                                      ""value"": ""[{\""name\"":\""/\"",\""policies\"":{\""request\"":[],\""response\"":[\""{\\\""policyType\\\"":\\\""ExtractVariables\\\"",\\\""async\\\"":false,\\\""continueOnError\\\"":false,\\\""displayName\\\"":\\\""Transaction Policy\\\"",\\\""enabled\\\"":true,\\\""faultRules\\\"":[],\\\""ignoreUnresolvedVariables\\\"":true,\\\""jSONPayload\\\"":{\\\""variable\\\"":[]},\\\""name\\\"":\\\""\\\"",\\\""source\\\"":{\\\""clearPayload\\\"":false,\\\""value\\\"":\\\""response\\\""},\\\""variablePrefix\\\"":\\\""apigee\\\"",\\\""xMLPayload\\\"":{\\\""namespaces\\\"":[],\\\""stopPayloadProcessing\\\"":false,\\\""variable\\\"":[]},\\\""extractions\\\"":[{\\\""Variable\\\"":{\\\""name\\\"":\\\""response.reason.phrase\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.status}\\\""}]}},{\\\""Header\\\"":{\\\""name\\\"":\\\""weight\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.cust_att1}\\\""}]}}]}\""]}},{\""name\"":\""/**\"",\""policies\"":{\""request\"":[],\""response\"":[\""{\\\""policyType\\\"":\\\""ExtractVariables\\\"",\\\""async\\\"":false,\\\""continueOnError\\\"":false,\\\""displayName\\\"":\\\""Transaction Policy\\\"",\\\""enabled\\\"":true,\\\""faultRules\\\"":[],\\\""ignoreUnresolvedVariables\\\"":true,\\\""jSONPayload\\\"":{\\\""variable\\\"":[]},\\\""name\\\"":\\\""\\\"",\\\""source\\\"":{\\\""clearPayload\\\"":false,\\\""value\\\"":\\\""response\\\""},\\\""variablePrefix\\\"":\\\""apigee\\\"",\\\""xMLPayload\\\"":{\\\""namespaces\\\"":[],\\\""stopPayloadProcessing\\\"":false,\\\""variable\\\"":[]},\\\""extractions\\\"":[{\\\""Variable\\\"":{\\\""name\\\"":\\\""response.reason.phrase\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.status}\\\""}]}},{\\\""Header\\\"":{\\\""name\\\"":\\\""weight\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.cust_att1}\\\""}]}}]}\""]}}]""
-                                    }
-                                  ],
-                                  ""createdAt"": 1531931088872,
-                                  ""createdBy"": ""one.two@three.com"",
-                                  ""description"": ""Some very long description about product can be inserted here to check if long string can be parsed correctly.Some very long description about product can be inserted here to check if long string can be parsed correctly."",
-                                  ""displayName"": ""some name 3"",
-                                  ""environments"": [
-                                    ""dev"",
-                                    ""test""
-                                  ],
-                                  ""lastModifiedAt"": 1538584334657,
-                                  ""lastModifiedBy"": ""custom@one.com"",
-                                  ""name"": ""some name2"",
-                                  ""proxies"": [
-                                    ""Maps-Online""
-                                  ],
-                                  ""quota"": ""{entitiesLimit}0"",
-                                  ""quotaInterval"": ""1"",
-                                  ""quotaTimeUnit"": ""hour"",
-                                  ""scopes"": [
-                                    """"
-                                  ]
-                                }
-                              ]
-                            }";
+            var json = @"{
+                        ""apiProduct"": [
+                        {
+                            ""apiResources"": [
+                            ""/*/featureinfo/*/*/*/*/*/*.**""
+                            ],
+                            ""approvalType"": ""auto"",
+                            ""attributes"": [
+                            {
+                                ""name"": ""MINT_TRANSACTION_SUCCESS_CRITERIA"",
+                                ""value"": ""txProviderStatus == '200'""
+                            },
+                            {
+                                ""name"": ""access"",
+                                ""value"": ""public""
+                            },
+                            {
+                                ""name"": ""transactionRecordingPolicies"",
+                                ""value"": ""[
+                        {\""name\"":\""/*/featureinfo/*/*/*/*/*/*.**\"",\""policies\"":{\""request\"":[],\""response\"":[\""{\\\""policyType\\\"":\\\""ExtractVariables\\\"",\\\""async\\\"":false,\\\""continueOnError\\\"":false,\\\""displayName\\\"":\\\""Transaction Policy\\\"",\\\""enabled\\\"":true,\\\""faultRules\\\"":[],\\\""ignoreUnresolvedVariables\\\"":true,\\\""jSONPayload\\\"":{\\\""variable\\\"":[]},\\\""name\\\"":\\\""\\\"",\\\""source\\\"":{\\\""clearPayload\\\"":false,\\\""value\\\"":\\\""response\\\""},\\\""variablePrefix\\\"":\\\""apigee\\\"",\\\""xMLPayload\\\"":{\\\""namespaces\\\"":[],\\\""stopPayloadProcessing\\\"":false,\\\""variable\\\"":[]},\\\""extractions\\\"":[{\\\""Variable\\\"":{\\\""name\\\"":\\\""response.status.code\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.status}\\\""}]}}]}\""]}}]""
+                            }
+                            ],
+                            ""createdAt"": 1536070064743,
+                            ""createdBy"": ""jerry.jerry@jerry.com"",
+                            ""description"": ""some description"",
+                            ""displayName"": ""name to Display"",
+                            ""environments"": [],
+                            ""lastModifiedAt"": 1536070444283,
+                            ""lastModifiedBy"": ""tom.tom@tom.com"",
+                            ""name"": ""Some name"",
+                            ""proxies"": [
+                            ""Maps-Online""
+                            ],
+                            ""scopes"": [
+                            """"
+                            ]
+                        },
+                        {
+                            ""apiResources"": [
+                            ""/"",
+                            ""/**""
+                            ],
+                            ""approvalType"": ""auto"",
+                            ""attributes"": [
+                            {
+                                ""name"": ""MINT_CUSTOM_ATTRIBUTE_1"",
+                                ""value"": ""weight""
+                            },
+                            {
+                                ""name"": ""MINT_TRANSACTION_SUCCESS_CRITERIA"",
+                                ""value"": ""txProviderStatus == 'OK'""
+                            },
+                            {
+                                ""name"": ""transactionRecordingPolicies"",
+                                ""value"": ""[{\""name\"":\""/\"",\""policies\"":{\""request\"":[],\""response\"":[\""{\\\""policyType\\\"":\\\""ExtractVariables\\\"",\\\""async\\\"":false,\\\""continueOnError\\\"":false,\\\""displayName\\\"":\\\""Transaction Policy\\\"",\\\""enabled\\\"":true,\\\""faultRules\\\"":[],\\\""ignoreUnresolvedVariables\\\"":true,\\\""jSONPayload\\\"":{\\\""variable\\\"":[]},\\\""name\\\"":\\\""\\\"",\\\""source\\\"":{\\\""clearPayload\\\"":false,\\\""value\\\"":\\\""response\\\""},\\\""variablePrefix\\\"":\\\""apigee\\\"",\\\""xMLPayload\\\"":{\\\""namespaces\\\"":[],\\\""stopPayloadProcessing\\\"":false,\\\""variable\\\"":[]},\\\""extractions\\\"":[{\\\""Variable\\\"":{\\\""name\\\"":\\\""response.reason.phrase\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.status}\\\""}]}},{\\\""Header\\\"":{\\\""name\\\"":\\\""weight\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.cust_att1}\\\""}]}}]}\""]}},{\""name\"":\""/**\"",\""policies\"":{\""request\"":[],\""response\"":[\""{\\\""policyType\\\"":\\\""ExtractVariables\\\"",\\\""async\\\"":false,\\\""continueOnError\\\"":false,\\\""displayName\\\"":\\\""Transaction Policy\\\"",\\\""enabled\\\"":true,\\\""faultRules\\\"":[],\\\""ignoreUnresolvedVariables\\\"":true,\\\""jSONPayload\\\"":{\\\""variable\\\"":[]},\\\""name\\\"":\\\""\\\"",\\\""source\\\"":{\\\""clearPayload\\\"":false,\\\""value\\\"":\\\""response\\\""},\\\""variablePrefix\\\"":\\\""apigee\\\"",\\\""xMLPayload\\\"":{\\\""namespaces\\\"":[],\\\""stopPayloadProcessing\\\"":false,\\\""variable\\\"":[]},\\\""extractions\\\"":[{\\\""Variable\\\"":{\\\""name\\\"":\\\""response.reason.phrase\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.status}\\\""}]}},{\\\""Header\\\"":{\\\""name\\\"":\\\""weight\\\"",\\\""pattern\\\"":[{\\\""ignoreCase\\\"":true,\\\""value\\\"":\\\""{mint.tx.cust_att1}\\\""}]}}]}\""]}}]""
+                            }
+                            ],
+                            ""createdAt"": 1531931088872,
+                            ""createdBy"": ""one.two@three.com"",
+                            ""description"": ""Some very long description about product can be inserted here to check if long string can be parsed correctly.Some very long description about product can be inserted here to check if long string can be parsed correctly."",
+                            ""displayName"": ""some name 3"",
+                            ""environments"": [
+                            ""dev"",
+                            ""test""
+                            ],
+                            ""lastModifiedAt"": 1538584334657,
+                            ""lastModifiedBy"": ""custom@one.com"",
+                            ""name"": ""some name2"",
+                            ""proxies"": [
+                            ""Maps-Online""
+                            ],
+                            ""quota"": ""{entitiesLimit}0"",
+                            ""quotaInterval"": ""1"",
+                            ""quotaTimeUnit"": ""hour"",
+                            ""scopes"": [
+                            """"
+                            ]
+                        }
+                        ]
+                    }";
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={entitiesLimit}";
 
-            var apigeeService = this.GetInitializedApigeeService(url, json);
-
-            List<ApiProduct> apiProducts = apigeeService.GetApiProducts().Result;
+            var apigeeService = GetInitializedApigeeService(url, json);
+            var apiProducts = await apigeeService.GetApiProducts();
 
             Assert.AreEqual(2, apiProducts.Count);
 
@@ -128,7 +128,6 @@ namespace ApigeeSDK.Unit.Tests
 
             Assert.IsTrue(apiProducts[0].IsPublic);
 
-
             new ApiProduct()
             {
                 LastModifiedBy = "custom@one.com",
@@ -145,27 +144,26 @@ namespace ApigeeSDK.Unit.Tests
                 .ShouldEqual(apiProducts[1]);
 
             Assert.IsFalse(apiProducts[1].IsPublic);
-
         }
 
         [Test]
-        public void ReturnListOfApiProductsForEmptyJson()
+        public async Task ReturnListOfApiProductsForEmptyJson()
         {
-            string json = @"{ ""apiProduct"": [ ] }";
+            var json = @"{ ""apiProduct"": [ ] }";
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={entitiesLimit}";
 
-            var apigeeService = this.GetInitializedApigeeService(url, json);
+            var apigeeService = GetInitializedApigeeService(url, json);
 
-            List<ApiProduct> apiProducts = apigeeService.GetApiProducts().Result;
+            var apiProducts = await apigeeService.GetApiProducts();
 
             Assert.AreEqual(0, apiProducts.Count);
         }
 
         [Test]
-        public void ReturnListOfApiProductsByPortions()
+        public async Task ReturnListOfApiProductsByPortions()
         {
-            string jsonPortion1 = @"{
+            var jsonPortion1 = @"{
                               ""apiProduct"": [
                                 {
                                   ""createdBy"": ""one.one@one.com"",
@@ -182,7 +180,7 @@ namespace ApigeeSDK.Unit.Tests
                               ]
                             }";
 
-            string jsonPortion2 = @"{
+            var jsonPortion2 = @"{
                               ""apiProduct"": [
                                 {
                                   ""createdBy"": ""three.three@three.com"",
@@ -195,17 +193,17 @@ namespace ApigeeSDK.Unit.Tests
                               ]
                             }";
 
-            int testEntitiesLimit = 3;
+            var testEntitiesLimit = 3;
 
-            string urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={testEntitiesLimit}";
-            string urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={testEntitiesLimit}&startKey=name3";
+            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={testEntitiesLimit}";
+            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={testEntitiesLimit}&startKey=name3";
 
-            this.RegisterUrlAndJson(urlForPortion1, jsonPortion1);
-            this.RegisterUrlAndJson(urlForPortion2, jsonPortion2);
+            RegisterUrlAndJson(urlForPortion1, jsonPortion1);
+            RegisterUrlAndJson(urlForPortion2, jsonPortion2);
             _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
-            var apigeeService = Container.Resolve<ApigeeClient>();
 
-            List<ApiProduct> apiProducts = apigeeService.GetApiProducts().Result;
+            var apigeeService = Container.Resolve<ApigeeClient>();
+            var apiProducts = await apigeeService.GetApiProducts();
 
             Assert.AreEqual(4, apiProducts.Count);
 
@@ -220,24 +218,21 @@ namespace ApigeeSDK.Unit.Tests
 
             Assert.AreEqual("name4", apiProducts[3].Name);
             Assert.AreEqual("four.four@four.com", apiProducts[3].CreatedBy);
-
         }
 
         [Test]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
-            string invalidJson = @"[
+            var invalidJson = @"[
                     '11111111-1111-1111-1111-111111111
                     '33333333-3333-3333-3333-333333333333'
                 ".QuotesToDoubleQuotes();
 
-            var apigeeService = this.GetInitializedApigeeService(
+            var apigeeService = GetInitializedApigeeService(
                 BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={entitiesLimit}", invalidJson);
             
-
             Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
                 await apigeeService.GetApiProducts());
         }
-
     }
 }

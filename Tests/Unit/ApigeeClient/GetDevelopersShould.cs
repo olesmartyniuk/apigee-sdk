@@ -5,13 +5,13 @@ using Unity;
 using SemanticComparison.Fluent;
 using System.Net;
 using ApigeeSDK.Models;
+using System.Threading.Tasks;
 
 namespace ApigeeSDK.Unit.Tests
 {
     public class GetDevelopersShould : ApigeeClientTestsBase
     {
         private const int entitiesLimit = 1000;
-        private const int statisticsLimit = 14000;
 
         [SetUp]
         protected override void Init()
@@ -21,9 +21,9 @@ namespace ApigeeSDK.Unit.Tests
         }
 
         [Test]
-        public void ReturnListOfDevelopersForValidJson()
+        public async Task ReturnListOfDevelopersForValidJson()
         {
-            string json = @"{
+            var json = @"{
                 ""developer"": [
                     {
                         ""apps"": [],
@@ -84,11 +84,10 @@ namespace ApigeeSDK.Unit.Tests
                 ]
             }";
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/developers?expand=true&count={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/developers?expand=true&count={entitiesLimit}";
 
-            var apigeeService = this.GetInitializedApigeeService(url, json);
-
-            var developers = apigeeService.GetDevelopers().Result;
+            var apigeeService = GetInitializedApigeeService(url, json);
+            var developers = await apigeeService.GetDevelopers();
 
             Assert.AreEqual(2, developers.Count);
 
@@ -121,28 +120,24 @@ namespace ApigeeSDK.Unit.Tests
             }.AsSource().OfLikeness<Developer>().ShouldEqual(developers[1]);
 
             Assert.IsFalse(developers[1].IsActive); 
-
         }
 
         [Test]
-        public void ReturnEmptyListOfDevelopersForEmptyList()
+        public async Task ReturnEmptyListOfDevelopersForEmptyList()
         {
-            string json = @"{ ""developer"": [ ] }";
+            var json = @"{ ""developer"": [ ] }";
+            var url = BaseUrl + $"/v1/o/{OrgName}/developers?expand=true&count={entitiesLimit}";
 
-            string url = BaseUrl + $"/v1/o/{OrgName}/developers?expand=true&count={entitiesLimit}";
-
-            var apigeeService = this.GetInitializedApigeeService(url, json, HttpStatusCode.NotFound);
-
-            List<Developer> developers = apigeeService.GetDevelopers().Result;
+            var apigeeService = GetInitializedApigeeService(url, json);
+            var developers = await apigeeService.GetDevelopers();
 
             Assert.AreEqual(0, developers.Count);
-
         }
 
         [Test]
-        public void ReturnListOfDevelopersByPortions()
+        public async Task ReturnListOfDevelopersByPortions()
         {
-            string jsonPortion1 = @"{
+            var jsonPortion1 = @"{
                 ""developer"": [
                     {
                         ""email"": ""email1@company.com"",
@@ -158,7 +153,7 @@ namespace ApigeeSDK.Unit.Tests
                     }
                 ]}";
 
-            string jsonPortion2 = @"{
+            var jsonPortion2 = @"{
                 ""developer"": [
                     {
                         ""email"": ""email3@company.com"",
@@ -170,16 +165,16 @@ namespace ApigeeSDK.Unit.Tests
                     }
                 ]}";
 
-            int testEntitiesLimit = 3;
-            string urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/developers?expand=true&count={testEntitiesLimit}";
-            string urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/developers?expand=true&count={testEntitiesLimit}&startKey=email3@company.com";
+            var testEntitiesLimit = 3;
+            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/developers?expand=true&count={testEntitiesLimit}";
+            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/developers?expand=true&count={testEntitiesLimit}&startKey=email3@company.com";
 
-            this.RegisterUrlAndJson(urlForPortion1, jsonPortion1);
-            this.RegisterUrlAndJson(urlForPortion2, jsonPortion2);
+            RegisterUrlAndJson(urlForPortion1, jsonPortion1);
+            RegisterUrlAndJson(urlForPortion2, jsonPortion2);
             _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
-            var apigeeService = Container.Resolve<ApigeeClient>();
 
-            List<Developer> developers = apigeeService.GetDevelopers().Result;
+            var apigeeService = Container.Resolve<ApigeeClient>();
+            var developers = await apigeeService.GetDevelopers();
 
             Assert.AreEqual(4, developers.Count);
 
@@ -199,7 +194,7 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
-            string invalidJson = @"[
+            var invalidJson = @"[
                     '11111111-1111-1111-1111-111111111
                     '33333333-3333-3333-3333-333333333333'
                 ".QuotesToDoubleQuotes();

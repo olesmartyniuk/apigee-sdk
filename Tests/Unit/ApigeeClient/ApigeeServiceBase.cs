@@ -20,11 +20,11 @@ namespace ApigeeSDK.Unit.Tests
         protected const string EnvName = "test";
         protected const int RequestTimeOut = 300;
 
+        protected Mock<ApigeeClientOptions> _apigeeClientOptionsMock;
         protected Mock<HttpService> _httpServiceMock;
         protected Mock<TokenProvider> _tokenProviderMock;
         protected Mock<HttpServiceAuthenticated> _httpServiceAuthenticatedMock;
-        protected Mock<ApigeeClientOptions> _apigeeClientOptionsMock;
-
+        
         public IUnityContainer Container { get; } = new UnityContainer();
 
         [SetUp]
@@ -58,8 +58,7 @@ namespace ApigeeSDK.Unit.Tests
                 MockBehavior.Strict, _httpServiceMock.Object, _tokenProviderMock.Object);
             Container.RegisterInstance(_httpServiceAuthenticatedMock.Object);
 
-            Container.RegisterSingleton(typeof(ApigeeClient), typeof(ApigeeClient),
-                new InjectionConstructor(Container.Resolve<ApigeeClientOptions>(), Container.Resolve<HttpServiceAuthenticated>()));
+            Container.RegisterSingleton<ApigeeClient>();
         }
 
         protected void RegisterUrlAndJson(string url, string json, HttpStatusCode statusCode = HttpStatusCode.OK)
