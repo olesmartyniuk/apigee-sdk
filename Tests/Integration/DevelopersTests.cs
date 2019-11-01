@@ -48,7 +48,7 @@ namespace ApigeeSDK.Integration.Tests
             var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => client.GetApplications());
             Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Bad credentials\"}"));
+            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Failed usergrid authentication : error_description -invalid username or password\"}"));
         }
 
         [Test]
