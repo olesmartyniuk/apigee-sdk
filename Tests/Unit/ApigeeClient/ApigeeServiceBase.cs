@@ -41,6 +41,8 @@ namespace ApigeeSDK.Unit.Tests
                 .Returns(EnvName);
             _apigeeClientOptionsMock.Setup(x => x.BaseUrl)
                 .Returns(BaseUrl);
+            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit)
+                .Returns(2);
             Container.RegisterInstance(_apigeeClientOptionsMock.Object);
 
             _httpServiceMock = new Mock<HttpService>(

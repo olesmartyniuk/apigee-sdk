@@ -39,6 +39,11 @@ namespace ApigeeSDK
 
         public ApigeeClient(ApigeeClientOptions options, HttpServiceAuthenticated httpService)
         {
+            if (options.EntitiesLimit <= 1)
+            {
+                throw new ApigeeSDKException("Incorrect entities limit: {options.EntitiesLimit}. Should be more than 1.");
+            }
+
             _organizationName = options.OrgName;
             _environmentName = options.EnvName;
             _baseUrl = options.BaseUrl;
@@ -124,7 +129,10 @@ namespace ApigeeSDK
         {
             var url = BaseUrlWithOrg + $"/apiproducts?expand=true&count={_entitiesLimit}";
 
-            return await GetEntitiesByPortions<ApiProduct>(url, x => x.Name, x => JsonConvert.DeserializeObject<ApiProductsList>(x).ApiProducts);
+            return await GetEntitiesByPortions(
+                url, 
+                x => x.Name, 
+                x => JsonConvert.DeserializeObject<ApiProductsList>(x).ApiProducts);
         }
 
         public async Task<ApiProduct> GetApiProduct(string productName)

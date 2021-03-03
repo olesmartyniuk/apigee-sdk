@@ -50,7 +50,7 @@ namespace ApigeeSDK.Integration.Tests
                 () => client.GetApplications());
             
             Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Failed usergrid authentication : error_description - invalid username or password\"}"));
+            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}"));
         }
 
         [Test]
@@ -75,7 +75,7 @@ namespace ApigeeSDK.Integration.Tests
                 () => client.GetApplications());
             
             Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Failed usergrid authentication : error_description -invalid username or password\"}"));
+            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}"));
         }
 
         [Test]
@@ -101,7 +101,7 @@ namespace ApigeeSDK.Integration.Tests
                 () => client.GetApplications());
             
             Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Failed usergrid authentication : error_description -invalid username or password\"}"));
+            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}"));
         }
 
         [Test]
