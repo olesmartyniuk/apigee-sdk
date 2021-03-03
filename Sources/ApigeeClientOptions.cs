@@ -4,13 +4,13 @@ namespace ApigeeSDK
 {
     public class ApigeeClientOptions 
     {
-        public virtual string Email { get; set;  }
-        public virtual string Password { get; set;  }
-        public virtual string OrgName { get; set;  }
-        public virtual string EnvName { get; set; }
-        public virtual string BaseUrl { get; set; }
-        public virtual int EntitiesLimit { get; set; }
-        public virtual TimeSpan HttpTimeout { get; set; }
+        public string Email { get; set;  }
+        public string Password { get; set;  }
+        public string OrgName { get; set;  }
+        public string EnvName { get; set; }
+        public string BaseUrl { get; set; }
+        public int EntitiesLimit { get; set; }
+        public TimeSpan HttpTimeout { get; set; }
         public string AuthenticationUrl { get; set; }
 
         public ApigeeClientOptions(
@@ -25,7 +25,8 @@ namespace ApigeeSDK
                   envName, 
                   "https://api.enterprise.apigee.com", 
                   "https://login.apigee.com/oauth/token", 
-                  TimeSpan.FromSeconds(30))
+                  TimeSpan.FromSeconds(30),
+                  1000)
         {
         }
 
@@ -36,7 +37,8 @@ namespace ApigeeSDK
             string envName, 
             string baseUrl, 
             string authenticationUrl, 
-            TimeSpan httpTimeout)
+            TimeSpan httpTimeout,
+            int entitiesLimit)
         {
             Email = email;
             Password = password;
@@ -45,7 +47,7 @@ namespace ApigeeSDK
             BaseUrl = baseUrl;
             AuthenticationUrl = authenticationUrl;
             HttpTimeout = httpTimeout;            
-            EntitiesLimit = 1000;
+            EntitiesLimit = entitiesLimit;
         }
     }
 }

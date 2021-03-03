@@ -1,24 +1,13 @@
 ﻿using ApigeeSDK.Models;
-using NUnit.Framework;
 using SemanticComparison.Fluent;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity;
+using Xunit;
 
 namespace ApigeeSDK.Unit.Tests
 {
     public class GetApplicationsShould : ApigeeClientTestsBase
     {
-        private const int entitiesLimit = 1000;
-
-        [SetUp]
-        protected override void Init()
-        {
-            base.Init();
-            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);
-        }
-
-        [Test]
+        [Fact]
         public async Task ReturnListOfApplicationsForValidJson()
         {
             var json = @"{
@@ -149,12 +138,12 @@ namespace ApigeeSDK.Unit.Tests
                     }";
 
 
-            var url = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={entitiesLimit}";
-
-            var apigeeService = GetInitializedApigeeService(url, json);
+            var url = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={EntitiesLimit}";
+            RegisterUrl(url, json);
+            var apigeeService = GetApigeeClient();
             var applications = await apigeeService.GetApplications();
 
-            Assert.AreEqual(2, applications.Count);
+            Assert.Equal(2, applications.Count);
 
             new Application()
             {
@@ -172,9 +161,9 @@ namespace ApigeeSDK.Unit.Tests
                 .Without(x => x.CompanyName)
                 .ShouldEqual(applications[0]);
 
-            Assert.AreEqual("My Company App", applications[0].DisplayName);
-            Assert.AreEqual("craig-gardener-", applications[0].CompanyName);
-            Assert.IsNull(applications[0].DeveloperId);
+            Assert.Equal("My Company App", applications[0].DisplayName);
+            Assert.Equal("craig-gardener-", applications[0].CompanyName);
+            Assert.Null(applications[0].DeveloperId);
 
             new Application()
             {
@@ -193,24 +182,25 @@ namespace ApigeeSDK.Unit.Tests
                 .ShouldEqual(applications[1]);
 
 
-            Assert.AreEqual("Developer artDocs", applications[1].DisplayName);
-            Assert.AreEqual("c7b4fa3a-8f84-40a5-8b61-48c29b8082d1", applications[1].DeveloperId);
-            Assert.IsNull(applications[1].CompanyName);
+            Assert.Equal("Developer artDocs", applications[1].DisplayName);
+            Assert.Equal("c7b4fa3a-8f84-40a5-8b61-48c29b8082d1", applications[1].DeveloperId);
+            Assert.Null(applications[1].CompanyName);
         }
 
-        [Test]
+        [Fact]
         public async Task ReturnEmptyListForEmptyJson()
         {
             var emptyJson = @"{ ""app"": [ ] }";
-            var url = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={EntitiesLimit}";
+            RegisterUrl(url, emptyJson);
 
-            var apigeeService = GetInitializedApigeeService(url, emptyJson);
+            var apigeeService = GetApigeeClient();
             var applications = await apigeeService.GetApplications();
 
-            Assert.AreEqual(0, applications.Count);
+            Assert.Equal(0, applications.Count);
         }
 
-        [Test]
+        [Fact]
         public async Task ReturnListOfApplicationsByPortions()
         {
             var jsonPortion1 = @"{
@@ -242,47 +232,44 @@ namespace ApigeeSDK.Unit.Tests
                 }
             ]
                             }";
-            var testEntitiesLimit = 3;
-            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={testEntitiesLimit}";
-            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={testEntitiesLimit}&startKey=33333333-3333-3333-3333-333333333333";
+            EntitiesLimit = 3;
+            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={EntitiesLimit}";
+            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={EntitiesLimit}&startKey=33333333-3333-3333-3333-333333333333";
 
-            RegisterUrlAndJson(urlForPortion1, jsonPortion1);
-            RegisterUrlAndJson(urlForPortion2, jsonPortion2);
+            RegisterUrl(urlForPortion2, jsonPortion2);
+            RegisterUrl(urlForPortion1, jsonPortion1);
 
-            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
-
-            var apigeeService = Container.Resolve<ApigeeClient>();
+            var apigeeService = GetApigeeClient();
             var applications = await apigeeService.GetApplications();
 
-            Assert.AreEqual(4, applications.Count);
+            Assert.Equal(4, applications.Count);
 
-            Assert.AreEqual("application1", applications[0].Name);
-            Assert.AreEqual("11111111-1111-1111-1111-111111111111", applications[0].ApplicationId);
+            Assert.Equal("application1", applications[0].Name);
+            Assert.Equal("11111111-1111-1111-1111-111111111111", applications[0].ApplicationId);
 
-            Assert.AreEqual("application2", applications[1].Name);
-            Assert.AreEqual("22222222-2222-2222-2222-222222222222", applications[1].ApplicationId);
+            Assert.Equal("application2", applications[1].Name);
+            Assert.Equal("22222222-2222-2222-2222-222222222222", applications[1].ApplicationId);
 
-            Assert.AreEqual("application3", applications[2].Name);
-            Assert.AreEqual("33333333-3333-3333-3333-333333333333", applications[2].ApplicationId);
+            Assert.Equal("application3", applications[2].Name);
+            Assert.Equal("33333333-3333-3333-3333-333333333333", applications[2].ApplicationId);
 
-            Assert.AreEqual("application4", applications[3].Name);
-            Assert.AreEqual("44444444-4444-4444-4444-444444444444", applications[3].ApplicationId);
+            Assert.Equal("application4", applications[3].Name);
+            Assert.Equal("44444444-4444-4444-4444-444444444444", applications[3].ApplicationId);
         }
 
 
-        [Test]
+        [Fact]
         public void ThrowJsonSerializationExceptionForInvalidJson()
         {
             var invalidJson = @"[
                     '11111111-1111-1111-1111-111111111
                     '33333333-3333-3333-3333-333333333333'
                 ".QuotesToDoubleQuotes();
+            RegisterUrl(BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={EntitiesLimit}", invalidJson);
 
-            var apigeeService =
-                GetInitializedApigeeService(
-                    BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={entitiesLimit}", invalidJson);
+            var apigeeService = GetApigeeClient();
 
-            Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
+            Assert.ThrowsAsync<Newtonsoft.Json.JsonException>(async () =>
                 await apigeeService.GetApplications());
         }
     }

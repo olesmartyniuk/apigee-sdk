@@ -1,8 +1,8 @@
-using NUnit.Framework;
 using System;
 using System.Net;
 using System.Threading.Tasks;
 using ApigeeSDK.Exceptions;
+using Xunit;
 
 namespace ApigeeSDK.Integration.Tests
 {
@@ -13,11 +13,6 @@ namespace ApigeeSDK.Integration.Tests
         private readonly string _orgName = Environment.GetEnvironmentVariable("APIGEE_ORGNAME");
         private readonly string _envName = "test";
         
-        [SetUp]
-        public void Setup()
-        {            
-        }
-
         private ApigeeClient CreateClient()
         {
             var options = new ApigeeClientOptions(
@@ -28,16 +23,14 @@ namespace ApigeeSDK.Integration.Tests
             return new ApigeeClient(options);
         }
 
-        [Test]
+        [Fact]
         public async Task GetDevelopersIsSuccessfull()
         {
-            var devs = await CreateClient().GetDevelopers();
-
-            Assert.Pass();
+            await CreateClient().GetDevelopers();
         }
 
-        [Test]
-        public void GetDevelopersWithWrongCredentialsRaiseError()
+        [Fact]
+        public async Task GetDevelopersWithWrongCredentialsRaiseError()
         {
             var options = new ApigeeClientOptions(
                 "WRONG_USER",
@@ -46,23 +39,21 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_ENV");
             var client = new ApigeeClient(options);
 
-            var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => client.GetApplications());
             
-            Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}"));
+            Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
+            Assert.Equal("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}", error.Message);
         }
 
-        [Test]
+        [Fact]
         public async Task GetDevelopersEmailsIsSuccessfull()
         {
             await CreateClient().GetDevelopersEmails();
-
-            Assert.Pass();
         }
 
-        [Test]
-        public void GetDevelopersEmailsWithWrongCredentialsRaiseError()
+        [Fact]
+        public async Task GetDevelopersEmailsWithWrongCredentialsRaiseError()
         {
             var options = new ApigeeClientOptions(
                 "WRONG_USER",
@@ -71,24 +62,22 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_ENV");
             var client = new ApigeeClient(options);
 
-            var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => client.GetApplications());
             
-            Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}"));
+            Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
+            Assert.Equal("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}", error.Message);
         }
 
-        [Test]
+        [Fact]
         public async Task GetDeveloperByEmailIsSuccessfull()
         {
             var developerExistedByDefault = "helloworld@apigee.com";
-            await CreateClient().GetDeveloper(developerExistedByDefault);   
-
-            Assert.Pass(); 
+            await CreateClient().GetDeveloper(developerExistedByDefault);
         }
 
-        [Test]
-        public void GetDeveloperByEmailWithWrongCredentialsRaiseError()
+        [Fact]
+        public async Task GetDeveloperByEmailWithWrongCredentialsRaiseError()
         {
             var options = new ApigeeClientOptions(
                 "WRONG_USER",
@@ -97,24 +86,24 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_ENV");
             var client = new ApigeeClient(options);
 
-            var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => client.GetApplications());
             
-            Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}"));
+            Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
+            Assert.Equal("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}", error.Message);
         }
 
-        [Test]
-        public void GetDeveloperByWrongEmailRaiseError()
+        [Fact]
+        public async Task GetDeveloperByWrongEmailRaiseError()
         {
-            var developerUndexisted = "WRONG_DEVELOPER_EMAIL";
+            var developerUnexisted = "WRONG_DEVELOPER_EMAIL";
 
-            var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
-                () => CreateClient().GetDeveloper(developerUndexisted));
+            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
+                () => CreateClient().GetDeveloper(developerUnexisted));
             
-            Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
-            Assert.That(error.Message, Is.EqualTo("{\n  \"code\" : \"developer.service.DeveloperIdDoesNotExist\",\n" +
-                $"  \"message\" : \"DeveloperId {developerUndexisted} does not exist in organization {_orgName}\",\n  \"contexts\" : [ ]\n}}"));
+            Assert.Equal(HttpStatusCode.NotFound, error.StatusCode);
+            Assert.Equal("{\n  \"code\" : \"developer.service.DeveloperIdDoesNotExist\",\n" +
+                $"  \"message\" : \"DeveloperId {developerUnexisted} does not exist in organization {_orgName}\",\n  \"contexts\" : [ ]\n}}", error.Message);
         }
     }
 }

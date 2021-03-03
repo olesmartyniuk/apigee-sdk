@@ -1,12 +1,11 @@
 ﻿using Moq;
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Unity;
 using ApigeeSDK.Services;
 using ApigeeSDK.Exceptions;
+using Xunit;
 
 namespace ApigeeSDK.Unit.Tests
 {
@@ -23,8 +22,7 @@ namespace ApigeeSDK.Unit.Tests
 
         public IUnityContainer Container { get; } = new UnityContainer();
 
-        [SetUp]
-        public void Setup()
+        public HttpServiceAuthenticatedShould()
         {
             _apigeeClientOptionsMock = new Mock<ApigeeClientOptions>(Email, Password, OrgName, EnvName);
             Container.RegisterInstance(_apigeeClientOptionsMock.Object);
@@ -57,7 +55,7 @@ namespace ApigeeSDK.Unit.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public async Task SendAdditionalRequestIfTokenExpired()
         {
             var RESPONSE = "response";
@@ -80,7 +78,7 @@ namespace ApigeeSDK.Unit.Tests
             var response = await Sut.GetAsync(It.IsAny<string>(),
                 It.IsAny<IEnumerable<KeyValuePair<string, string>>>());
 
-            Assert.AreEqual(RESPONSE, response);
+            Assert.Equal(RESPONSE, response);
 
             _httpServiceMock.Verify(x =>
                 x.GetAsync(
@@ -91,7 +89,7 @@ namespace ApigeeSDK.Unit.Tests
             _tokenProviderMock.Verify(x => x.GetAuthorizationHeader(true), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void RethrowWebExceptionIfBadWebResponse()
         {
             _httpServiceMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))

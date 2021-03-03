@@ -1,14 +1,14 @@
-﻿using NUnit.Framework;
-using System;
+﻿using System;
 using SemanticComparison.Fluent;
 using ApigeeSDK.Models;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace ApigeeSDK.Unit.Tests
 {
     public class GetApplicationByIdShould : ApigeeClientTestsBase
     {
-        [Test]
+        [Fact]
         public async Task ReturnApplicationByIdForValidJson()
         {
             var json = @"{
@@ -76,8 +76,8 @@ namespace ApigeeSDK.Unit.Tests
             };
 
             var url = BaseUrl + $"/v1/o/{OrgName}/apps/{applicationId}";
-
-            var apigeeService = GetInitializedApigeeService(url, json);
+            RegisterUrl(url, json);
+            var apigeeService = GetApigeeClient();
             var application = await apigeeService.GetApplication(expectedApplication.ApplicationId);
 
             expectedApplication.AsSource().OfLikeness<Application>()
@@ -87,15 +87,15 @@ namespace ApigeeSDK.Unit.Tests
                 .Without(x => x.CompanyName)
                 .ShouldEqual(application);
 
-            Assert.AreEqual(new DateTime(2018, 10, 29, 15, 0, 0), application.CreatedAtDateTime);
-            Assert.AreEqual(new DateTime(2018, 10, 29, 16, 0, 0), application.LastModifiedAtDateTime);
+            Assert.Equal(new DateTime(2018, 10, 29, 15, 0, 0), application.CreatedAtDateTime);
+            Assert.Equal(new DateTime(2018, 10, 29, 16, 0, 0), application.LastModifiedAtDateTime);
 
-            Assert.AreEqual("My Company App", application.DisplayName);
-            Assert.AreEqual("craig-gardener-", application.CompanyName);
-            Assert.IsNull(application.DeveloperId);
+            Assert.Equal("My Company App", application.DisplayName);
+            Assert.Equal("craig-gardener-", application.CompanyName);
+            Assert.Null(application.DeveloperId);
         }
 
-        [Test]
+        [Fact]
         public void ThrowJsonSerializationExceptionForInvalidJson()
         {
             var invalidJson = @"[
@@ -104,10 +104,11 @@ namespace ApigeeSDK.Unit.Tests
                 ".QuotesToDoubleQuotes();
 
             var applicationId = "44444444-4444-4444-4444-444444444444";
+            RegisterUrl(BaseUrl + $"/v1/o/{OrgName}/apps/{applicationId}", invalidJson);
 
-            var apigeeService = GetInitializedApigeeService(BaseUrl + $"/v1/o/{OrgName}/apps/{applicationId}", invalidJson);
+            var apigeeService = GetApigeeClient();
 
-            Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
+            Assert.ThrowsAsync<Newtonsoft.Json.JsonException>(async () =>
                 await apigeeService.GetApplication(applicationId));
         }
     }

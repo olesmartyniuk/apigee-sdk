@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ApigeeSDK.Exceptions
+﻿namespace ApigeeSDK.Exceptions
 {
     public class ApigeeSDKTimeoutException : ApigeeSDKException
     {

@@ -1,13 +1,13 @@
 ﻿using ApigeeSDK.Models;
-using NUnit.Framework;
 using SemanticComparison.Fluent;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace ApigeeSDK.Unit.Tests
 {
     public class GetApplicationEmailAppNameShould : ApigeeClientTestsBase
     {
-        [Test]
+        [Fact]
         public async Task ReturnApplicationByNameForDeveloperForValidJson()
         {
             var json = @"{
@@ -88,8 +88,8 @@ namespace ApigeeSDK.Unit.Tests
             };
 
             var url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps/{applicationName}";
-
-            var apigeeService = GetInitializedApigeeService(url, json);
+            RegisterUrl(url, json);
+            var apigeeService = GetApigeeClient();
             var application = await apigeeService.GetApplication(developerEmail, applicationName);
 
             expectedApplication.AsSource().OfLikeness<Application>()
@@ -99,12 +99,12 @@ namespace ApigeeSDK.Unit.Tests
                 .Without(x => x.CompanyName)
                 .ShouldEqual(application);
 
-            Assert.AreEqual("CG-TEST", application.DisplayName);
-            Assert.AreEqual("5d5dd949-47e2-408e-aaf0-90bad72eb576", application.DeveloperId);
-            Assert.IsNull(application.CompanyName);
+            Assert.Equal("CG-TEST", application.DisplayName);
+            Assert.Equal("5d5dd949-47e2-408e-aaf0-90bad72eb576", application.DeveloperId);
+            Assert.Null(application.CompanyName);
         }
 
-        [Test]
+        [Fact]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
             var invalidJson = @"[
@@ -115,10 +115,10 @@ namespace ApigeeSDK.Unit.Tests
             var developerEmail = "developerEmail@email.com";
             var applicationName = "cg-test";
 
-            var apigeeService = this.GetInitializedApigeeService(
-                BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps/{applicationName}", invalidJson);
+            RegisterUrl(BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}/apps/{applicationName}", invalidJson);
+            var apigeeService = GetApigeeClient();
 
-            Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
+            Assert.ThrowsAsync<Newtonsoft.Json.JsonException>(async () =>
                 await apigeeService.GetApplication(developerEmail, applicationName));
         }
     }

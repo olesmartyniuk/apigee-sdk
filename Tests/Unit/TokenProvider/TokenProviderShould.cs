@@ -1,12 +1,9 @@
 ﻿using Moq;
-using NUnit.Framework;
 using System.Collections.Generic;
-using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Unity;
-using Unity.Injection;
 using ApigeeSDK.Services;
+using Xunit;
 
 namespace ApigeeSDK.Unit.Tests
 {
@@ -23,10 +20,9 @@ namespace ApigeeSDK.Unit.Tests
 
         public IUnityContainer Container { get; } = new UnityContainer();
 
-        [SetUp]
-        public void Init()
+        public TokenProviderShould()
         {
-            _apigeeClientOptionsMock = new Mock<ApigeeClientOptions>(Email, Password, OrgName, EnvName);   
+            _apigeeClientOptionsMock = new Mock<ApigeeClientOptions>(Email, Password, OrgName, EnvName);
             Container.RegisterInstance(_apigeeClientOptionsMock.Object);
 
             _httpServiceMock = new Mock<HttpService>(
@@ -36,8 +32,7 @@ namespace ApigeeSDK.Unit.Tests
 
             Container.RegisterSingleton<TokenProvider>();
         }
-
-
+        
         private TokenProvider Sut
         {
             get
@@ -46,18 +41,18 @@ namespace ApigeeSDK.Unit.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public async Task ProvideAccessToken()
         {
             SetupPostAsync("access_token_value", 1799);
 
             var header = await Sut.GetAuthorizationHeader(false);
 
-            Assert.AreEqual("Authorization", header.Key);
-            Assert.AreEqual("token_type_value access_token_value", header.Value);
+            Assert.Equal("Authorization", header.Key);
+            Assert.Equal("token_type_value access_token_value", header.Value);
         }
 
-        [Test]
+        [Fact]
         public async Task DoNotRefreshTokenIfNotExpired()
         {
             SetupPostAsync("access_token_value", 1799);
@@ -68,11 +63,11 @@ namespace ApigeeSDK.Unit.Tests
 
             header = await Sut.GetAuthorizationHeader(false);
 
-            Assert.AreEqual("Authorization", header.Key);
-            Assert.AreEqual("token_type_value access_token_value", header.Value);
+            Assert.Equal("Authorization", header.Key);
+            Assert.Equal("token_type_value access_token_value", header.Value);
         }
 
-        [Test]
+        [Fact]
         public async Task RefreshTokenIfExpired()
         {
             SetupPostAsync("access_token_value", 0);
@@ -83,11 +78,11 @@ namespace ApigeeSDK.Unit.Tests
 
             header = await Sut.GetAuthorizationHeader(false);
 
-            Assert.AreEqual("Authorization", header.Key);
-            Assert.AreEqual("token_type_value access_token_value2", header.Value);
+            Assert.Equal("Authorization", header.Key);
+            Assert.Equal("token_type_value access_token_value2", header.Value);
         }
 
-        [Test]
+        [Fact]
         public async Task RefreshTokenIfNotExpiredButForcedByUser()
         {
             SetupPostAsync("access_token_value", 1799);
@@ -98,11 +93,11 @@ namespace ApigeeSDK.Unit.Tests
 
             header = await Sut.GetAuthorizationHeader(true);
 
-            Assert.AreEqual("Authorization", header.Key);
-            Assert.AreEqual("token_type_value access_token_value2", header.Value);
+            Assert.Equal("Authorization", header.Key);
+            Assert.Equal("token_type_value access_token_value2", header.Value);
         }
 
-        [Test]
+        [Fact]
         public async Task RequestNewTokenWhenRefreshedTokenExpired()
         {
             SetupPostAsync("access_token_value", 0);
@@ -117,11 +112,11 @@ namespace ApigeeSDK.Unit.Tests
 
             header = await Sut.GetAuthorizationHeader(false);
 
-            Assert.AreEqual("Authorization", header.Key);
-            Assert.AreEqual("token_type_value access_token_value3", header.Value);
+            Assert.Equal("Authorization", header.Key);
+            Assert.Equal("token_type_value access_token_value3", header.Value);
         }
 
-        [Test]
+        [Fact]
         public async Task DoNotRequestNewTokenWhenRefreshedTokenIsNotExpired()
         {
             SetupPostAsync("access_token_value", 0);
@@ -136,8 +131,8 @@ namespace ApigeeSDK.Unit.Tests
 
             header = await Sut.GetAuthorizationHeader(false);
 
-            Assert.AreEqual("Authorization", header.Key);
-            Assert.AreEqual("token_type_value access_token_value2", header.Value);
+            Assert.Equal("Authorization", header.Key);
+            Assert.Equal("token_type_value access_token_value2", header.Value);
         }
 
         private void SetupPostAsync(string tokenValue, int tokenExpiresSeconds)
