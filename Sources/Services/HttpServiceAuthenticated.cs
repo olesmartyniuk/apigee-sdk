@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using ApigeeSDK.Exceptions;
 
@@ -9,13 +10,13 @@ namespace ApigeeSDK.Services
 {
     public class HttpServiceAuthenticated
     {
-        private HttpService _httpService;
-        private TokenProvider _tokenProvider;
+        private readonly HttpService _httpService;
+        private readonly TokenProvider _tokenProvider;
 
-        public HttpServiceAuthenticated(HttpService httpService, TokenProvider tokenProvider)
+        public HttpServiceAuthenticated(ApigeeClientOptions options, HttpClient http)
         {
-            _httpService = httpService;
-            _tokenProvider = tokenProvider;
+            _httpService = new HttpService(http);
+            _tokenProvider = new TokenProvider(options, _httpService);
         }
 
         public virtual async Task<string> GetAsync(string url,

@@ -20,7 +20,7 @@ namespace ApigeeSDK.Unit.Tests
         [Test]
         public async Task ReturnListOfApiProductsNamesForValidJson()
         {
-            string json = @"[
+            var json = @"[
                     'name1',
                     'name2',
                     'name3'
@@ -51,10 +51,10 @@ namespace ApigeeSDK.Unit.Tests
             var json = @"[ ]";
 
             var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={entitiesLimit}";
-            
+
             var apigeeService = GetInitializedApigeeService(url, json);
 
-            List<string> apiProductNames = await apigeeService.GetApiProductNames();
+            var apiProductNames = await apigeeService.GetApiProductNames();
 
             Assert.AreEqual(0, apiProductNames.Count);
         }

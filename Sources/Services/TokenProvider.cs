@@ -7,16 +7,16 @@ namespace ApigeeSDK.Services
 {
     public class TokenProvider
     {
-        private string _authenticationUrl = "https://login.apigee.com/oauth/token";
+        private readonly string _authenticationUrl = "https://login.apigee.com/oauth/token";
         private Token token;
         private DateTime requestNewTokenTime;
         private DateTime refreshTokenTime;
         private bool originalTokenWasRequested;
         private bool refreshTokenWasRequested;
-        private string _login;
-        private string _password;
+        private readonly string _login;
+        private readonly string _password;
 
-        private HttpService _httpService;
+        private readonly HttpService _httpService;
 
         public TokenProvider(ApigeeClientOptions options, HttpService httpService)
         {
@@ -38,7 +38,7 @@ namespace ApigeeSDK.Services
 
         private async Task UpdateToken()
         {
-            bool updateTokenSucceed = false;
+            var updateTokenSucceed = false;
             if (TokenCanBeRefreshed)
             {
                 await RefreshAccessToken();

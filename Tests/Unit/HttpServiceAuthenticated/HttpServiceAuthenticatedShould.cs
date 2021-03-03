@@ -76,7 +76,7 @@ namespace ApigeeSDK.Unit.Tests
 
                 return Task.FromResult(RESPONSE);
             });
-                       
+
             var response = await Sut.GetAsync(It.IsAny<string>(),
                 It.IsAny<IEnumerable<KeyValuePair<string, string>>>());
 

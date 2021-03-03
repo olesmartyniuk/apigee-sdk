@@ -4,64 +4,57 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Unity;
 using ApigeeSDK.Models;
 using ApigeeSDK.Services;
 using ApigeeSDK.Exceptions;
+using System.Net.Http;
 
 namespace ApigeeSDK
 {
     public class ApigeeClient 
     {
-        private string _baseUrl;
-        private string _authenticationUrl;
-        private int _entitiesLimit;
-        private string _organizationName;
-        private string _environmentName;
+        private readonly string _baseUrl;        
+        private readonly int _entitiesLimit;
+        private readonly string _organizationName;
+        private readonly string _environmentName;
 
-        private HttpServiceAuthenticated _httpService;
+        private readonly HttpClient _http;
 
-        private string BaseUrlWithOrg => _baseUrl + $"/v1/o/{_organizationName}";
+        private readonly HttpServiceAuthenticated _httpService;        
 
-        public static ApigeeClient Create(ApigeeClientOptions options)
+        public ApigeeClient(ApigeeClientOptions options, HttpClient http = null)
         {
-            using (var container = new UnityContainer())
-            {
-                container.RegisterInstance(options);
-                container.RegisterType<HttpService>();
-                container.RegisterType<TokenProvider>();
-                container.RegisterType<HttpServiceAuthenticated>();
-                container.RegisterType<ApigeeClient>();
+            ValidateOptions(options);
 
-                return container.Resolve<ApigeeClient>();
+            if (http == null)
+            {
+                _http = new HttpClient
+                {
+                    Timeout = options.HttpTimeout
+                };
             }
-        }
-
-        public ApigeeClient(ApigeeClientOptions options, HttpServiceAuthenticated httpService)
-        {
-            if (options.EntitiesLimit <= 1)
+            else
             {
-                throw new ApigeeSDKException("Incorrect entities limit: {options.EntitiesLimit}. Should be more than 1.");
+                _http = http;
             }
 
             _organizationName = options.OrgName;
             _environmentName = options.EnvName;
-            _baseUrl = options.BaseUrl;
-            _authenticationUrl = options.AuthenticationUrl;
+            _baseUrl = options.BaseUrl;            
             _entitiesLimit = options.EntitiesLimit;
-            _httpService = httpService;                                               
+            _httpService = new HttpServiceAuthenticated(options, _http);                                               
         }
 
         public async Task<List<string>> GetApplicationIds()
         {
-            var url = BaseUrlWithOrg + $"/apps?rows={_entitiesLimit}";
+            var url = GetAbsoluteUrl($"apps?rows={_entitiesLimit}");
 
             return await GetEntitiesByPortions<string>(url, x => x.ToString(), x => JsonConvert.DeserializeObject<List<string>>(x));
         }
 
         public async Task<List<Application>> GetApplications()
         {
-            var url = BaseUrlWithOrg + $"/apps?expand=true&rows={_entitiesLimit}";
+            var url = GetAbsoluteUrl($"apps?expand=true&rows={_entitiesLimit}");
 
             return await GetEntitiesByPortions<Application>(url, x => x.ApplicationId.ToString(),
                 x => JsonConvert.DeserializeObject<ApplicationsList>(x).Applications);
@@ -69,7 +62,7 @@ namespace ApigeeSDK
 
         public async Task<Application> GetApplication(string applicationId)
         {
-            var content = await _httpService.GetAsync(BaseUrlWithOrg + $"/apps/{applicationId}");
+            var content = await _httpService.GetAsync(GetAbsoluteUrl($"apps/{applicationId}"));
 
             return JsonConvert.DeserializeObject<Application>(content);
         }
@@ -77,35 +70,35 @@ namespace ApigeeSDK
         public async Task<Application> GetApplication(string developerEmail, string applicationName)
         {
             var content =
-                await _httpService.GetAsync(BaseUrlWithOrg + $"/developers/{developerEmail}/apps/{applicationName}");
+                await _httpService.GetAsync(GetAbsoluteUrl($"developers/{developerEmail}/apps/{applicationName}"));
 
             return JsonConvert.DeserializeObject<Application>(content);
         }
 
         public async Task<List<string>> GetDeveloperApplicationNames(string developerEmail)
         {
-            var url = BaseUrlWithOrg + $"/developers/{developerEmail}/apps?count={_entitiesLimit}";
+            var url = GetAbsoluteUrl($"developers/{developerEmail}/apps?count={_entitiesLimit}");
 
             return await GetEntitiesByPortions<string>(url, x => x.ToString(), x => JsonConvert.DeserializeObject<List<string>>(x));
         }
 
         public async Task<List<string>> GetDevelopersEmails()
         {
-            var url = BaseUrlWithOrg + $"/developers?count={_entitiesLimit}";
+            var url = GetAbsoluteUrl($"developers?count={_entitiesLimit}");
 
             return await GetEntitiesByPortions<string>(url, x => x.ToString(), x => JsonConvert.DeserializeObject<List<string>>(x));
         }
 
         public async Task<List<Developer>> GetDevelopers()
         {
-            var url = BaseUrlWithOrg + $"/developers?expand=true&count={_entitiesLimit}";
+            var url = GetAbsoluteUrl($"developers?expand=true&count={_entitiesLimit}");
 
             return await GetEntitiesByPortions<Developer>(url, x => x.Email, x => JsonConvert.DeserializeObject<DevelopersList>(x).Developers);
         }
 
         public async Task<List<Company>> GetCompanies()
         {
-            var url = BaseUrlWithOrg + $"/companies?expand=true&count={_entitiesLimit}";
+            var url = GetAbsoluteUrl($"companies?expand=true&count={_entitiesLimit}");
 
             return await GetEntitiesByPortions<Company>(url, x => x.Name, x => JsonConvert.DeserializeObject<CompanyList>(x).Companies);
         }
@@ -113,21 +106,21 @@ namespace ApigeeSDK
         public async Task<Developer> GetDeveloper(string developerEmail)
         {
             var content =
-                await _httpService.GetAsync(BaseUrlWithOrg + $"/developers/{developerEmail}");
+                await _httpService.GetAsync(GetAbsoluteUrl($"developers/{developerEmail}"));
 
             return JsonConvert.DeserializeObject<Developer>(content);
         }
 
         public async Task<List<string>> GetApiProductNames()
         {
-            var url = BaseUrlWithOrg + $"/apiproducts?count={_entitiesLimit}";
+            var url = GetAbsoluteUrl($"apiproducts?count={_entitiesLimit}");
 
             return await GetEntitiesByPortions<string>(url, x => x.ToString(), x => JsonConvert.DeserializeObject<List<string>>(x));
         }
 
         public async Task<List<ApiProduct>> GetApiProducts()
         {
-            var url = BaseUrlWithOrg + $"/apiproducts?expand=true&count={_entitiesLimit}";
+            var url = GetAbsoluteUrl($"apiproducts?expand=true&count={_entitiesLimit}");
 
             return await GetEntitiesByPortions(
                 url, 
@@ -137,7 +130,7 @@ namespace ApigeeSDK
 
         public async Task<ApiProduct> GetApiProduct(string productName)
         {
-            var url = BaseUrlWithOrg + $"/apiproducts/{productName}";
+            var url = GetAbsoluteUrl($"apiproducts/{productName}");
             var content = await _httpService.GetAsync(url);
 
             return JsonConvert.DeserializeObject<ApiProduct>(content);
@@ -149,7 +142,7 @@ namespace ApigeeSDK
             {
                 new KeyValuePair<string, string>("Content-Type", "multipart/form-data")
             };
-            string url = BaseUrlWithOrg + $"/apis?action=import&name={name}";
+            var url = GetAbsoluteUrl($"apis?action=import&name={name}");
 
             var content = await _httpService.PostFileAsync(url, headerParams, pathToBundle);
             return JsonConvert.DeserializeObject<ImportApiResponse>(content);
@@ -161,7 +154,7 @@ namespace ApigeeSDK
             {
                 new KeyValuePair<string, string>("Content-Type", "application/json")
             };
-            var url = BaseUrlWithOrg + $"/apiproducts";
+            var url = GetAbsoluteUrl("apiproducts");
 
             await _httpService.PostJsonAsync(url, headerParams, JsonConvert.SerializeObject(apiProduct));
         }
@@ -172,7 +165,7 @@ namespace ApigeeSDK
             {
                 new KeyValuePair<string, string>("Content-Type", "application/x-www-form-urlencoded")
             };
-            var url = BaseUrlWithOrg + $"/environments/{_environmentName}/apis/{apiName}/revisions/{revisionNumber}/deployments";
+            var url = GetAbsoluteUrl($"environments/{_environmentName}/apis/{apiName}/revisions/{revisionNumber}/deployments");
 
             await _httpService.PostAsync(url, headerParams);
         }
@@ -183,7 +176,7 @@ namespace ApigeeSDK
             {
                 new KeyValuePair<string, string>("Content-Type", "application/x-www-form-urlencoded")
             };
-            string url = BaseUrlWithOrg + $"/{_environmentName}/apis/{apiName}/revisions/{revisionNumber}/deployments";
+            var url = GetAbsoluteUrl($"{_environmentName}/apis/{apiName}/revisions/{revisionNumber}/deployments");
 
             await _httpService.DeleteAsync(url, headerParams);
         }
@@ -192,12 +185,20 @@ namespace ApigeeSDK
         {
             var deployedRevisions = await GetDeployedRevisionsForApiProxy(apiName);
 
-            foreach (int revision in deployedRevisions)
+            foreach (var revision in deployedRevisions)
             {
                 await UndeployApiProxy(apiName, revision);
             }
 
             await DeployApiProxy(apiName, revisionNumber);
+        }
+
+        private void ValidateOptions(ApigeeClientOptions options)
+        {
+            if (options.EntitiesLimit <= 1)
+            {
+                throw new ApigeeSDKException("Incorrect entities limit: {options.EntitiesLimit}. Should be more than 1.");
+            }
         }
 
         private async Task<List<int>> GetDeployedRevisionsForApiProxy(string apiName)
@@ -206,9 +207,9 @@ namespace ApigeeSDK
             {
                 new KeyValuePair<string, string>("Content-Type", "application/x-www-form-urlencoded")
             };
-            string url = BaseUrlWithOrg + $"/environments/{_environmentName}/apis/{apiName}/deployments";
+            var url = GetAbsoluteUrl($"environments/{_environmentName}/apis/{apiName}/deployments");
 
-            List<int> revisions = new List<int>();
+            var revisions = new List<int>();
 
             try
             {
@@ -232,10 +233,10 @@ namespace ApigeeSDK
 
         private async Task<List<T>> GetEntitiesByPortions<T>(string url, Func<T, string> getKeyFunc, Func<string, List<T>> parserFunc)
         {
-            List<T> all = new List<T>();
+            var all = new List<T>();
             List<T> portion = null;
             string startKey = null;
-            bool isFull = false;
+            var isFull = false;
             do
             {
                 if (portion != null)
@@ -268,6 +269,11 @@ namespace ApigeeSDK
             var content = await _httpService.GetAsync(url);
 
             return parserFunc(content);
+        }
+
+        private string GetAbsoluteUrl(string relativeUrl)
+        {
+            return $"{_baseUrl}/v1/o/{_organizationName}/{relativeUrl}";
         }
     }
 }

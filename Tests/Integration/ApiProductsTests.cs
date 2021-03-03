@@ -24,7 +24,7 @@ namespace ApigeeSDK.Integration.Tests
                 password,
                 orgName,
                 envName);
-            return ApigeeClient.Create(options);
+            return new ApigeeClient(options);
         }
 
         [Test]
@@ -43,7 +43,7 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_PASSWORD",
                 "WRONG_ORG",
                 "WRONG_ENV");
-            var client = ApigeeClient.Create(options);
+            var client = new ApigeeClient(options);
 
             var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => client.GetApiProducts());
@@ -73,8 +73,8 @@ namespace ApigeeSDK.Integration.Tests
                 envName);
             options.EntitiesLimit = 2;
 
-            var client = ApigeeClient.Create(options);
-            
+            var client = new ApigeeClient(options);
+
             await client.GetApiProducts();
 
             Assert.Pass();

@@ -242,7 +242,7 @@ namespace ApigeeSDK.Unit.Tests
                 }
             ]
                             }";
-            int testEntitiesLimit = 3;
+            var testEntitiesLimit = 3;
             var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={testEntitiesLimit}";
             var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apps?expand=true&rows={testEntitiesLimit}&startKey=33333333-3333-3333-3333-333333333333";
 

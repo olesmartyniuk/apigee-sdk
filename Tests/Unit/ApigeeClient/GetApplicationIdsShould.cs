@@ -52,7 +52,7 @@ namespace ApigeeSDK.Unit.Tests
 
             var apigeeService = GetInitializedApigeeService(url, emptyJson);
 
-            List<string> applicationIds = await apigeeService.GetApplicationIds();
+            var applicationIds = await apigeeService.GetApplicationIds();
 
             Assert.AreEqual(0, applicationIds.Count);
         }

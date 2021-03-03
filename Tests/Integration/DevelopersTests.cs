@@ -8,10 +8,10 @@ namespace ApigeeSDK.Integration.Tests
 {
     public class DevelopersTests
     {        
-        private string _email = Environment.GetEnvironmentVariable("APIGEE_EMAIL");
-        private string _password = Environment.GetEnvironmentVariable("APIGEE_PASSWORD");
-        private string _orgName = Environment.GetEnvironmentVariable("APIGEE_ORGNAME");
-        private string _envName = "test";
+        private readonly string _email = Environment.GetEnvironmentVariable("APIGEE_EMAIL");
+        private readonly string _password = Environment.GetEnvironmentVariable("APIGEE_PASSWORD");
+        private readonly string _orgName = Environment.GetEnvironmentVariable("APIGEE_ORGNAME");
+        private readonly string _envName = "test";
         
         [SetUp]
         public void Setup()
@@ -25,7 +25,7 @@ namespace ApigeeSDK.Integration.Tests
                 _password,
                 _orgName,
                 _envName);
-            return ApigeeClient.Create(options);
+            return new ApigeeClient(options);
         }
 
         [Test]
@@ -44,7 +44,7 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_PASSWORD",
                 "WRONG_ORG",
                 "WRONG_ENV");
-            var client = ApigeeClient.Create(options);
+            var client = new ApigeeClient(options);
 
             var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => client.GetApplications());
@@ -69,7 +69,7 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_PASSWORD",
                 "WRONG_ORG",
                 "WRONG_ENV");
-            var client = ApigeeClient.Create(options);
+            var client = new ApigeeClient(options);
 
             var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => client.GetApplications());
@@ -95,7 +95,7 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_PASSWORD",
                 "WRONG_ORG",
                 "WRONG_ENV");
-            var client = ApigeeClient.Create(options);
+            var client = new ApigeeClient(options);
 
             var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => client.GetApplications());
@@ -108,7 +108,7 @@ namespace ApigeeSDK.Integration.Tests
         public void GetDeveloperByWrongEmailRaiseError()
         {
             var developerUndexisted = "WRONG_DEVELOPER_EMAIL";
-            
+
             var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
                 () => CreateClient().GetDeveloper(developerUndexisted));
             

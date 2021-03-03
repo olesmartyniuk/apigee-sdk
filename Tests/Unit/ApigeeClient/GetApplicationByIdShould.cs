@@ -76,7 +76,7 @@ namespace ApigeeSDK.Unit.Tests
             };
 
             var url = BaseUrl + $"/v1/o/{OrgName}/apps/{applicationId}";
-            
+
             var apigeeService = GetInitializedApigeeService(url, json);
             var application = await apigeeService.GetApplication(expectedApplication.ApplicationId);
 

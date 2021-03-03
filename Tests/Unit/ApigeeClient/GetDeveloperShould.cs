@@ -55,7 +55,7 @@ namespace ApigeeSDK.Unit.Tests
             };
 
             var url = BaseUrl + $"/v1/o/{OrgName}/developers/{developerEmail}";
-            
+
             var apigeeService = GetInitializedApigeeService(url, json);
             var developer = await apigeeService.GetDeveloper(developerEmail);
 

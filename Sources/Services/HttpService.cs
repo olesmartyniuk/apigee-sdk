@@ -13,11 +13,11 @@ namespace ApigeeSDK.Services
 {
     public class HttpService
     {
-        private TimeSpan _requestTimeOut = Timeout.InfiniteTimeSpan;
+        private readonly HttpClient _http;
 
-        public HttpService(ApigeeClientOptions options)
+        public HttpService(HttpClient http)
         {
-            _requestTimeOut = options.HttpTimeout;
+            _http = http;
         }
 
         public virtual async Task<string> PostAsync(string url,
@@ -43,7 +43,7 @@ namespace ApigeeSDK.Services
 
             ByteArrayContent fileContent = null;
 
-            using (FileStream fs = File.OpenRead(filePath))
+            using (var fs = File.OpenRead(filePath))
             {
                 var streamContent = new StreamContent(fs);
                 fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
@@ -61,7 +61,7 @@ namespace ApigeeSDK.Services
             string json)
         {
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
+
             return await SendAsync(HttpMethod.Post, url, headers, content);
         }
 
@@ -126,19 +126,16 @@ namespace ApigeeSDK.Services
             }
 
             HttpResponseMessage response = null;
-            using (var http = new HttpClient())
+
+            try
             {
-                try
-                {
-                    http.Timeout = _requestTimeOut;
-                    response = await http.SendAsync(request);
-                }
-                catch (TaskCanceledException e)
-                    when (e.InnerException is IOException && 
-                          e.Source == "System.Net.Http")
-                {
-                    throw new ApigeeSDKTimeoutException("Operation timeout.");
-                }
+                response = await _http.SendAsync(request);
+            }
+            catch (TaskCanceledException e)
+                when (e.InnerException is IOException &&
+                      e.Source == "System.Net.Http")
+            {
+                throw new ApigeeSDKTimeoutException("Operation timeout.");
             }
 
             if (!response.IsSuccessStatusCode)

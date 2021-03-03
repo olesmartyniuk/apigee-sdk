@@ -64,7 +64,7 @@ namespace ApigeeSDK.Unit.Tests
         {
             var jsonPortion1 = @"['name1', 'name2', 'name3' ]".QuotesToDoubleQuotes();
             var jsonPortion2 = @"['name3', 'name4' ]".QuotesToDoubleQuotes();
-            
+
             var expectedList = new List<string>()
             {
                 "name1", "name2", "name3", "name4"
