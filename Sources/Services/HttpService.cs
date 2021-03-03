@@ -133,13 +133,15 @@ namespace ApigeeSDK.Services
                 when (e.InnerException is IOException &&
                       e.Source == "System.Net.Http")
             {
-                throw new ApigeeSDKTimeoutException("Operation timeout.");
+                throw new ApigeeSdkTimeoutException("Operation timeout.");
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                var body = await response.Content.ReadAsStringAsync();
-                throw new ApigeeSDKHttpException(response.StatusCode, body);
+                var body = response.Content != null 
+                    ? await response.Content.ReadAsStringAsync() 
+                    : string.Empty;
+                throw new ApigeeSdkHttpException(response.StatusCode, body);
             }
 
             return await response.Content.ReadAsStringAsync();

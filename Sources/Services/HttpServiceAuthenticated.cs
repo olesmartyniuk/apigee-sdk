@@ -22,47 +22,47 @@ namespace ApigeeSDK.Services
         public virtual async Task<string> GetAsync(string url,
             IEnumerable<KeyValuePair<string, string>> rawHeaders = null)
         {
-            Task<string> action(IEnumerable<KeyValuePair<string, string>> headers)
+            Task<string> Action(IEnumerable<KeyValuePair<string, string>> headers)
             {
                 return _httpService.GetAsync(url, headers);
             }
 
-            return await CallWithAuthorizationHeader(rawHeaders, action);
+            return await CallWithAuthorizationHeader(rawHeaders, Action);
         }
 
         public virtual async Task<string> PostJsonAsync(string url,
             IEnumerable<KeyValuePair<string, string>> rawHeaders,
             string json)
         {
-            Task<string> action(IEnumerable<KeyValuePair<string, string>> headers)
+            Task<string> Action(IEnumerable<KeyValuePair<string, string>> headers)
             {
                 return _httpService.PostJsonAsync(url, headers, json);
             }
 
-            return await CallWithAuthorizationHeader(rawHeaders, action);
+            return await CallWithAuthorizationHeader(rawHeaders, Action);
         }
 
         public virtual async Task<string> PostFileAsync(string url,
             IEnumerable<KeyValuePair<string, string>> rawHeaders,
             string filePath)
         {
-            Task<string> action(IEnumerable<KeyValuePair<string, string>> headers)
+            Task<string> Action(IEnumerable<KeyValuePair<string, string>> headers)
             {
                 return _httpService.PostFileAsync(url, headers, filePath);
             }
 
-            return await CallWithAuthorizationHeader(rawHeaders, action);
+            return await CallWithAuthorizationHeader(rawHeaders, Action);
         }
 
         public virtual async Task<string> PostAsync(string url,
             IEnumerable<KeyValuePair<string, string>> rawHeaders)
         {
-            Task<string> action(IEnumerable<KeyValuePair<string, string>> headers)
+            Task<string> Action(IEnumerable<KeyValuePair<string, string>> headers)
             {
                 return _httpService.PostAsync(url, headers, null);
             }
 
-            return await CallWithAuthorizationHeader(rawHeaders, action);
+            return await CallWithAuthorizationHeader(rawHeaders, Action);
         }
 
         private delegate Task<string> HttpActionDelegate(IEnumerable<KeyValuePair<string, string>> headers); 
@@ -70,12 +70,12 @@ namespace ApigeeSDK.Services
         public virtual async Task<string> DeleteAsync(string url,
             IEnumerable<KeyValuePair<string, string>> rawHeaders)
         {
-            Task<string> action(IEnumerable<KeyValuePair<string, string>> headers)
+            Task<string> Action(IEnumerable<KeyValuePair<string, string>> headers)
             {
                 return _httpService.DeleteAsync(url, headers, null);
             }
 
-            return await CallWithAuthorizationHeader(rawHeaders, action);
+            return await CallWithAuthorizationHeader(rawHeaders, Action);
         }
 
         private async Task<string> CallWithAuthorizationHeader
@@ -90,7 +90,7 @@ namespace ApigeeSDK.Services
             {
                 return await func(headers);
             }
-            catch (ApigeeSDKHttpException e)
+            catch (ApigeeSdkHttpException e)
                 when (e.StatusCode == HttpStatusCode.Unauthorized)
             {
                 headers = PrepareHeaders(rawHeaders);

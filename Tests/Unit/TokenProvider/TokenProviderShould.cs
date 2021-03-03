@@ -15,20 +15,20 @@ namespace ApigeeSDK.Unit.Tests
         protected const string EnvName = "test";
         protected const int RequestTimeOut = 300;
 
-        protected Mock<ApigeeClientOptions> _apigeeClientOptionsMock;
-        protected Mock<HttpService> _httpServiceMock;
+        protected Mock<ApigeeClientOptions> ApigeeClientOptionsMock;
+        protected Mock<HttpService> HttpServiceMock;
 
         public IUnityContainer Container { get; } = new UnityContainer();
 
         public TokenProviderShould()
         {
-            _apigeeClientOptionsMock = new Mock<ApigeeClientOptions>(Email, Password, OrgName, EnvName);
-            Container.RegisterInstance(_apigeeClientOptionsMock.Object);
+            ApigeeClientOptionsMock = new Mock<ApigeeClientOptions>(Email, Password, OrgName, EnvName);
+            Container.RegisterInstance(ApigeeClientOptionsMock.Object);
 
-            _httpServiceMock = new Mock<HttpService>(
+            HttpServiceMock = new Mock<HttpService>(
                 MockBehavior.Strict,
-                _apigeeClientOptionsMock.Object);
-            Container.RegisterInstance(_httpServiceMock.Object);
+                ApigeeClientOptionsMock.Object);
+            Container.RegisterInstance(HttpServiceMock.Object);
 
             Container.RegisterSingleton<TokenProvider>();
         }
@@ -137,7 +137,7 @@ namespace ApigeeSDK.Unit.Tests
 
         private void SetupPostAsync(string tokenValue, int tokenExpiresSeconds)
         {
-            _httpServiceMock.Setup(x => x.PostAsync("https://login.apigee.com/oauth/token",
+            HttpServiceMock.Setup(x => x.PostAsync("https://login.apigee.com/oauth/token",
                     It.IsAny<KeyValuePair<string, string>[]>(),
                     It.IsAny<KeyValuePair<string, string>[]>()))
                 .Returns(Task.FromResult($@"{{

@@ -197,7 +197,7 @@ namespace ApigeeSDK
         {
             if (options.EntitiesLimit <= 1)
             {
-                throw new ApigeeSDKException("Incorrect entities limit: {options.EntitiesLimit}. Should be more than 1.");
+                throw new ApigeeSdkException("Incorrect entities limit: {options.EntitiesLimit}. Should be more than 1.");
             }
         }
 
@@ -218,7 +218,7 @@ namespace ApigeeSDK
                 return JsonConvert.DeserializeObject<DeploymentDetails>(content)
                     .Revisions.Select(x => x.Name).ToList();
             }
-            catch (ApigeeSDKHttpException ex)
+            catch (ApigeeSdkHttpException ex)
                 when (ex.StatusCode == HttpStatusCode.BadRequest)
             {
                 var error = JsonConvert.DeserializeObject<Error>(ex.Message);

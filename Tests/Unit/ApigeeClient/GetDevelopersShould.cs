@@ -119,7 +119,7 @@ namespace ApigeeSDK.Unit.Tests
             var apigeeService = GetApigeeClient();
             var developers = await apigeeService.GetDevelopers();
 
-            Assert.Equal(0, developers.Count);
+            Assert.Empty(developers);
         }
 
         [Fact]

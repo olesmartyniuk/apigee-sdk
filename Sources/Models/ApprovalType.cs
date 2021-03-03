@@ -2,7 +2,7 @@
 {
     public enum ApprovalType
     {
-        auto,
-        manual
+        Auto,
+        Manual
     }
 }

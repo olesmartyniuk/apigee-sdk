@@ -15,17 +15,17 @@ namespace ApigeeSDK.Unit.Tests
         protected int RequestTimeOut = 300;
         protected int EntitiesLimit = 1000;
 
-        private readonly MockHttpMessageHandler _mockHttp = new MockHttpMessageHandler();
+        protected readonly MockHttpMessageHandler _mockHttp = new MockHttpMessageHandler();
 
         public ApigeeClientTestsBase()
         {
             _mockHttp
                 .When(AuthUrl)
-                .Respond(HttpStatusCode.OK, "application/json", 
+                .Respond(HttpStatusCode.OK, "application/json",
         @"{
-                    'access_token': 'token',
+                    'access_token': 'access_token',
                     'token_type': 'token_type',
-                    'refresh_token': null,
+                    'refresh_token': 'refresh_token',
                     'expires_in': 1000,
                     'scope': 'scope',
                     'jti': '00000000-0000-0000-0000-000000000000'

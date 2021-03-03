@@ -39,7 +39,7 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_ENV");
             var client = new ApigeeClient(options);
 
-            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSdkHttpException>(
                 () => client.GetApplications());
             
             Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
@@ -62,7 +62,7 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_ENV");
             var client = new ApigeeClient(options);
 
-            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSdkHttpException>(
                 () => client.GetApplications());
             
             Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
@@ -86,7 +86,7 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_ENV");
             var client = new ApigeeClient(options);
 
-            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSdkHttpException>(
                 () => client.GetApplications());
             
             Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
@@ -98,7 +98,7 @@ namespace ApigeeSDK.Integration.Tests
         {
             var developerUnexisted = "WRONG_DEVELOPER_EMAIL";
 
-            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSdkHttpException>(
                 () => CreateClient().GetDeveloper(developerUnexisted));
             
             Assert.Equal(HttpStatusCode.NotFound, error.StatusCode);

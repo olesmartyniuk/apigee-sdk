@@ -82,7 +82,7 @@ namespace ApigeeSDK.Unit.Tests
             var apigeeService = GetApigeeClient();
             var companies = await apigeeService.GetCompanies();
 
-            Assert.Equal(0, companies.Count);
+            Assert.Empty(companies);
         }
 
         [Fact]

@@ -145,7 +145,7 @@ namespace ApigeeSDK.Unit.Tests
 
             var apiProducts = await apigeeService.GetApiProducts();
 
-            Assert.Equal(0, apiProducts.Count);
+            Assert.Empty(apiProducts);
         }
 
         [Fact]

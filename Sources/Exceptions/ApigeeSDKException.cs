@@ -2,9 +2,9 @@
 
 namespace ApigeeSDK.Exceptions
 {
-    public class ApigeeSDKException : Exception
+    public class ApigeeSdkException : Exception
     {
-        public ApigeeSDKException(string message) : base(message)
+        public ApigeeSdkException(string message) : base(message)
         {
         }
     }

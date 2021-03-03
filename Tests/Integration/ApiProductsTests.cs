@@ -38,7 +38,7 @@ namespace ApigeeSDK.Integration.Tests
                 "WRONG_ENV");
             var client = new ApigeeClient(options);
 
-            var error = await Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSdkHttpException>(
                 () => client.GetApiProducts());
             Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
             Assert.Equal("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}", error.Message);

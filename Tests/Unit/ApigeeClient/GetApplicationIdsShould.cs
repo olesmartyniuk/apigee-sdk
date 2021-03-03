@@ -44,7 +44,7 @@ namespace ApigeeSDK.Unit.Tests
 
             var applicationIds = await apigeeService.GetApplicationIds();
 
-            Assert.Equal(0, applicationIds.Count);
+            Assert.Empty(applicationIds);
         }
 
         [Fact]

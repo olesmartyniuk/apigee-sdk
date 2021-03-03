@@ -197,7 +197,7 @@ namespace ApigeeSDK.Unit.Tests
             var apigeeService = GetApigeeClient();
             var applications = await apigeeService.GetApplications();
 
-            Assert.Equal(0, applications.Count);
+            Assert.Empty(applications);
         }
 
         [Fact]

@@ -44,7 +44,7 @@ namespace ApigeeSDK.Unit.Tests
             var apigeeService = GetApigeeClient();
             var developerNames = await apigeeService.GetDevelopersEmails();
 
-            Assert.Equal(0, developerNames.Count);
+            Assert.Empty(developerNames);
         }
 
         [Fact]
