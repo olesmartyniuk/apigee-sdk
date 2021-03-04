@@ -1,52 +1,42 @@
-﻿using Moq;
-using System.Collections.Generic;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
-using Unity;
 using ApigeeSDK.Services;
+using RichardSzalay.MockHttp;
 using Xunit;
 
 namespace ApigeeSDK.Unit.Tests
 {
-    public class TokenProviderShould
+    public class TokenProviderShould : ApigeeClientTestsBase
     {
-        protected const string Email = "email";
-        protected const string Password = "password";
-        protected const string OrgName = "organization";
-        protected const string EnvName = "test";
-        protected const int RequestTimeOut = 300;
-
-        protected Mock<ApigeeClientOptions> ApigeeClientOptionsMock;
-        protected Mock<HttpService> HttpServiceMock;
-
-        public IUnityContainer Container { get; } = new UnityContainer();
-
-        public TokenProviderShould()
+        private TokenProvider CreateTokenProvider()
         {
-            ApigeeClientOptionsMock = new Mock<ApigeeClientOptions>(Email, Password, OrgName, EnvName);
-            Container.RegisterInstance(ApigeeClientOptionsMock.Object);
+            var http = _mockHttp.ToHttpClient();
+            var options = new ApigeeClientOptions(Email, Password, OrgName, EnvName, BaseUrl, AuthUrl,
+                TimeSpan.FromSeconds(RequestTimeOut), EntitiesLimit);
+            var httpService = new HttpService(http);
 
-            HttpServiceMock = new Mock<HttpService>(
-                MockBehavior.Strict,
-                ApigeeClientOptionsMock.Object);
-            Container.RegisterInstance(HttpServiceMock.Object);
-
-            Container.RegisterSingleton<TokenProvider>();
-        }
-        
-        private TokenProvider Sut
-        {
-            get
-            {
-                return Container.Resolve<TokenProvider>();
-            }
+            return new TokenProvider(options, httpService);
         }
 
         [Fact]
         public async Task ProvideAccessToken()
         {
-            SetupPostAsync("access_token_value", 1799);
+            _mockHttp.Clear();
 
-            var header = await Sut.GetAuthorizationHeader(false);
+            _mockHttp
+                .When(AuthUrl)
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                    'access_token': 'access_token_value',
+                    'token_type': 'token_type_value',
+                    'refresh_token': 'refresh_token_value',
+                    'expires_in': 1000,
+                    'scope': 'scim.me openid password.write approvals.me oauth.approvals',
+                    'jti': '11111111-1111-1111-1111-111111111111'
+                }");
+
+            var header = await CreateTokenProvider().GetAuthorizationHeader(false);
 
             Assert.Equal("Authorization", header.Key);
             Assert.Equal("token_type_value access_token_value", header.Value);
@@ -55,99 +45,212 @@ namespace ApigeeSDK.Unit.Tests
         [Fact]
         public async Task DoNotRefreshTokenIfNotExpired()
         {
-            SetupPostAsync("access_token_value", 1799);
+            _mockHttp.Clear();
 
-            var header = await Sut.GetAuthorizationHeader(false);
+            var getToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "password")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'old_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 1000,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            SetupPostAsync("access_token_value2", 1799);
+            var refreshToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "refresh_token")
+                .Respond(HttpStatusCode.OK, "application/json",
+        @"{
+                        'access_token': 'new_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 1000,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            header = await Sut.GetAuthorizationHeader(false);
+            var provider = CreateTokenProvider();
+
+            await provider.GetAuthorizationHeader(false);
+
+            var header = await provider.GetAuthorizationHeader(false);
 
             Assert.Equal("Authorization", header.Key);
-            Assert.Equal("token_type_value access_token_value", header.Value);
+            Assert.Equal("token_type old_token", header.Value);
+
+            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
+            Assert.Equal(0, _mockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]
         public async Task RefreshTokenIfExpired()
         {
-            SetupPostAsync("access_token_value", 0);
+            _mockHttp.Clear();
 
-            var header = await Sut.GetAuthorizationHeader(false);
+            var getToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "password")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'old_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 0,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            SetupPostAsync("access_token_value2", 1799);
+            var refreshToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "refresh_token")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'new_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 1000,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            header = await Sut.GetAuthorizationHeader(false);
+            var provider = CreateTokenProvider();
+
+            await provider.GetAuthorizationHeader(false);
+
+            var header = await provider.GetAuthorizationHeader(false);
 
             Assert.Equal("Authorization", header.Key);
-            Assert.Equal("token_type_value access_token_value2", header.Value);
+            Assert.Equal("token_type new_token", header.Value);
+
+            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]
         public async Task RefreshTokenIfNotExpiredButForcedByUser()
         {
-            SetupPostAsync("access_token_value", 1799);
+            _mockHttp.Clear();
 
-            var header = await Sut.GetAuthorizationHeader(false);
+            var getToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "password")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'old_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 1000,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            SetupPostAsync("access_token_value2", 1799);
+            var refreshToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "refresh_token")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'new_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 1000,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            header = await Sut.GetAuthorizationHeader(true);
+            var provider = CreateTokenProvider();
+
+            await provider.GetAuthorizationHeader(false);
+
+            var header = await provider.GetAuthorizationHeader(true);
 
             Assert.Equal("Authorization", header.Key);
-            Assert.Equal("token_type_value access_token_value2", header.Value);
+            Assert.Equal("token_type new_token", header.Value);
+
+            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]
         public async Task RequestNewTokenWhenRefreshedTokenExpired()
         {
-            SetupPostAsync("access_token_value", 0);
+            _mockHttp.Clear();
 
-            var header = await Sut.GetAuthorizationHeader(false);
+            var getToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "password")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'old_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 0,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            SetupPostAsync("access_token_value2", 0);
+            var refreshToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "refresh_token")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'new_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 0,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            header = await Sut.GetAuthorizationHeader(false);
+            var provider = CreateTokenProvider();
 
-            SetupPostAsync("access_token_value3", 1799);
+            await provider.GetAuthorizationHeader(false);
 
-            header = await Sut.GetAuthorizationHeader(false);
+            var header = await provider.GetAuthorizationHeader(false);
 
             Assert.Equal("Authorization", header.Key);
-            Assert.Equal("token_type_value access_token_value3", header.Value);
+            Assert.Equal("token_type old_token", header.Value);
+
+            Assert.Equal(2, _mockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]
         public async Task DoNotRequestNewTokenWhenRefreshedTokenIsNotExpired()
         {
-            SetupPostAsync("access_token_value", 0);
+            _mockHttp.Clear();
 
-            var header = await Sut.GetAuthorizationHeader(false);
+            var getToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "password")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'old_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 0,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            SetupPostAsync("access_token_value2", 1799);
+            var refreshToken = _mockHttp.When(AuthUrl)
+                .WithFormData("grant_type", "refresh_token")
+                .Respond(HttpStatusCode.OK, "application/json",
+                    @"{
+                        'access_token': 'new_token',
+                        'token_type': 'token_type',
+                        'refresh_token': 'refresh_token',
+                        'expires_in': 1000,
+                        'scope': 'scope',
+                        'jti': '00000000-0000-0000-0000-000000000000'
+                    }");
 
-            header = await Sut.GetAuthorizationHeader(false);
+            var provider = CreateTokenProvider();
 
-            SetupPostAsync("access_token_value3", 1799);
+            await provider.GetAuthorizationHeader(false);
+            await provider.GetAuthorizationHeader(false);
 
-            header = await Sut.GetAuthorizationHeader(false);
+            var header = await provider.GetAuthorizationHeader(false);
 
             Assert.Equal("Authorization", header.Key);
-            Assert.Equal("token_type_value access_token_value2", header.Value);
-        }
+            Assert.Equal("token_type new_token", header.Value);
 
-        private void SetupPostAsync(string tokenValue, int tokenExpiresSeconds)
-        {
-            HttpServiceMock.Setup(x => x.PostAsync("https://login.apigee.com/oauth/token",
-                    It.IsAny<KeyValuePair<string, string>[]>(),
-                    It.IsAny<KeyValuePair<string, string>[]>()))
-                .Returns(Task.FromResult($@"{{
-                        ""access_token"": ""{tokenValue}"",
-                        ""token_type"": ""token_type_value"",
-                        ""refresh_token"": ""refresh_token_value"",
-                        ""expires_in"": {tokenExpiresSeconds},
-                        ""scope"": ""scim.me openid password.write approvals.me oauth.approvals"",
-                        ""jti"": ""11111111-1111-1111-1111-111111111111""
-                    }}"));
+            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
         }
     }
 }

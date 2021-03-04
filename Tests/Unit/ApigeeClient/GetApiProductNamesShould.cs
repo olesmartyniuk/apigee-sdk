@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using ApigeeSDK.Exceptions;
 using Moq;
 using RichardSzalay.MockHttp;
 using Xunit;
@@ -108,7 +109,7 @@ namespace ApigeeSDK.Unit.Tests
             var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={EntitiesLimit}";
 
             _mockHttp.Clear();
-            
+
             var getProductsUnauthorized = _mockHttp.When(url)
                 .WithHeaders("Authorization", "token_type access_token")
                 .Respond(HttpStatusCode.Unauthorized);
@@ -154,19 +155,13 @@ namespace ApigeeSDK.Unit.Tests
             Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
         }
 
-        //[Fact]
-        //public void RethrowWebExceptionIfBadWebResponse()
-        //{
-        //    _httpServiceMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<KeyValuePair<string, string>>>()))
-        //        .Callback(() =>
-        //        {
-        //            throw new ApigeeSdkHttpException(HttpStatusCode.BadRequest, "Bad request");
-        //        });
+        [Fact]
+        public void RethrowExceptionIfBadResponse()
+        {
+            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={EntitiesLimit}";
+            RegisterUrl(url, string.Empty, HttpStatusCode.BadRequest);
 
-        //    Assert.ThrowsAsync<ApigeeSdkHttpException>(async () => await Sut.GetAsync(
-        //        It.IsAny<string>(),
-        //        It.IsAny<IEnumerable<KeyValuePair<string, string>>>())
-        //    );
-        //}
+            Assert.ThrowsAsync<ApigeeSdkHttpException>(async () => await GetApigeeClient().GetApiProductNames());
+        }
     }
 }
