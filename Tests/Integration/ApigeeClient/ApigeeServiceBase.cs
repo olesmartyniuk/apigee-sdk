@@ -2,7 +2,7 @@
 using System.Net;
 using RichardSzalay.MockHttp;
 
-namespace ApigeeSDK.Unit.Tests
+namespace ApigeeSDK.Integration.Tests.ApigeeClient
 {
     public class ApigeeClientTestsBase
     {
@@ -15,11 +15,11 @@ namespace ApigeeSDK.Unit.Tests
         protected int RequestTimeOut = 300;
         protected int EntitiesLimit = 1000;
 
-        protected readonly MockHttpMessageHandler _mockHttp = new MockHttpMessageHandler();
+        protected readonly MockHttpMessageHandler MockHttp = new MockHttpMessageHandler();
 
         public ApigeeClientTestsBase()
         {
-            _mockHttp
+            MockHttp
                 .When(AuthUrl)
                 .Respond(HttpStatusCode.OK, "application/json",
         @"{
@@ -34,18 +34,18 @@ namespace ApigeeSDK.Unit.Tests
 
         protected void RegisterUrl(string url, string json, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            _mockHttp
+            MockHttp
                 .When(url)
                 .Respond(statusCode, "application/json", json);
         }
 
-        protected ApigeeClient GetApigeeClient()
+        protected ApigeeSDK.ApigeeClient GetApigeeClient()
         {
-            var http = _mockHttp.ToHttpClient();
+            var http = MockHttp.ToHttpClient();
             var options = new ApigeeClientOptions(Email, Password, OrgName, EnvName, BaseUrl, AuthUrl,
                 TimeSpan.FromSeconds(RequestTimeOut), EntitiesLimit);
 
-            return new ApigeeClient(options, http);
+            return new ApigeeSDK.ApigeeClient(options, http);
         }
     }
 }

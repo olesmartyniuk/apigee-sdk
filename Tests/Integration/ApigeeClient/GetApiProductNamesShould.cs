@@ -2,11 +2,11 @@
 using System.Net;
 using System.Threading.Tasks;
 using ApigeeSDK.Exceptions;
-using Moq;
+using ApigeeSDK.Integration.Tests.Utils;
 using RichardSzalay.MockHttp;
 using Xunit;
 
-namespace ApigeeSDK.Unit.Tests
+namespace ApigeeSDK.Integration.Tests.ApigeeClient
 {
     public class GetApiProductNamesShould : ApigeeClientTestsBase
     {
@@ -108,13 +108,13 @@ namespace ApigeeSDK.Unit.Tests
 
             var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?count={EntitiesLimit}";
 
-            _mockHttp.Clear();
+            MockHttp.Clear();
 
-            var getProductsUnauthorized = _mockHttp.When(url)
+            var getProductsUnauthorized = MockHttp.When(url)
                 .WithHeaders("Authorization", "token_type access_token")
                 .Respond(HttpStatusCode.Unauthorized);
 
-            var getToken = _mockHttp.When(AuthUrl)
+            var getToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "password")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -126,7 +126,7 @@ namespace ApigeeSDK.Unit.Tests
                         'jti': '00000000-0000-0000-0000-000000000000'
                     }");
 
-            var refreshToken = _mockHttp.When(AuthUrl)
+            var refreshToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "refresh_token")
                 .Respond(HttpStatusCode.OK, "application/json",
         @"{
@@ -138,7 +138,7 @@ namespace ApigeeSDK.Unit.Tests
                         'jti': '00000000-0000-0000-0000-000000000000'
                     }");
 
-            var getProductsSuccessful = _mockHttp.When(url)
+            var getProductsSuccessful = MockHttp.When(url)
                 .WithHeaders(@"Authorization: token_type new_token")
                 .Respond("application/json", json);
 
@@ -149,10 +149,10 @@ namespace ApigeeSDK.Unit.Tests
             Assert.Equal(expectedList[1], apiProductNames[1]);
             Assert.Equal(expectedList[2], apiProductNames[2]);
 
-            Assert.Equal(1, _mockHttp.GetMatchCount(getProductsUnauthorized));
-            Assert.Equal(1, _mockHttp.GetMatchCount(getProductsSuccessful));
-            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
-            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(getProductsUnauthorized));
+            Assert.Equal(1, MockHttp.GetMatchCount(getProductsSuccessful));
+            Assert.Equal(1, MockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]

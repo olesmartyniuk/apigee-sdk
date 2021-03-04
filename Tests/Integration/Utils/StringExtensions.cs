@@ -1,4 +1,4 @@
-﻿namespace ApigeeSDK.Unit.Tests
+﻿namespace ApigeeSDK.Integration.Tests.Utils
 {
     public static class StringExtensions
     {

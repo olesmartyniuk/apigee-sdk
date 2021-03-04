@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using ApigeeSDK.Exceptions;
 using Xunit;
 
-namespace ApigeeSDK.Integration.Tests
+namespace ApigeeSDK.EndToEnd.Tests
 {
     public class DevelopersTests
     {        
@@ -24,7 +24,7 @@ namespace ApigeeSDK.Integration.Tests
         }
 
         [Fact]
-        public async Task GetDevelopersIsSuccessfull()
+        public async Task GetDevelopersIsSuccessful()
         {
             await CreateClient().GetDevelopers();
         }
@@ -47,7 +47,7 @@ namespace ApigeeSDK.Integration.Tests
         }
 
         [Fact]
-        public async Task GetDevelopersEmailsIsSuccessfull()
+        public async Task GetDevelopersEmailsIsSuccessful()
         {
             await CreateClient().GetDevelopersEmails();
         }
@@ -70,7 +70,7 @@ namespace ApigeeSDK.Integration.Tests
         }
 
         [Fact]
-        public async Task GetDeveloperByEmailIsSuccessfull()
+        public async Task GetDeveloperByEmailIsSuccessful()
         {
             var developerExistedByDefault = "helloworld@apigee.com";
             await CreateClient().GetDeveloper(developerExistedByDefault);
@@ -96,14 +96,14 @@ namespace ApigeeSDK.Integration.Tests
         [Fact]
         public async Task GetDeveloperByWrongEmailRaiseError()
         {
-            var developerUnexisted = "WRONG_DEVELOPER_EMAIL";
+            var developerInexistent = "WRONG_DEVELOPER_EMAIL";
 
             var error = await Assert.ThrowsAsync<ApigeeSdkHttpException>(
-                () => CreateClient().GetDeveloper(developerUnexisted));
+                () => CreateClient().GetDeveloper(developerInexistent));
             
             Assert.Equal(HttpStatusCode.NotFound, error.StatusCode);
             Assert.Equal("{\n  \"code\" : \"developer.service.DeveloperIdDoesNotExist\",\n" +
-                $"  \"message\" : \"DeveloperId {developerUnexisted} does not exist in organization {_orgName}\",\n  \"contexts\" : [ ]\n}}", error.Message);
+                $"  \"message\" : \"DeveloperId {developerInexistent} does not exist in organization {_orgName}\",\n  \"contexts\" : [ ]\n}}", error.Message);
         }
     }
 }

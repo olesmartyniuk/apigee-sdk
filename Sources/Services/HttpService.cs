@@ -39,9 +39,9 @@ namespace ApigeeSDK.Services
             var form = new MultipartFormDataContent();
             form.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
 
-            ByteArrayContent fileContent = null;
+            ByteArrayContent fileContent;
 
-            using (var fs = File.OpenRead(filePath))
+            await using (var fs = File.OpenRead(filePath))
             {
                 var streamContent = new StreamContent(fs);
                 fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
@@ -80,7 +80,7 @@ namespace ApigeeSDK.Services
             if (formContent != null)
             {
                 content = new FormUrlEncodedContent(formContent);
-            };
+            }
 
             return await SendAsync(method, url, headers, content);
         }
@@ -105,11 +105,7 @@ namespace ApigeeSDK.Services
                     switch (header.Key.ToLower(CultureInfo.InvariantCulture))
                     {
                         case "content-type":
-                            if (request.Content == null)
-                            {
-                                request.Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>());
-                            }
-
+                            request.Content ??= new FormUrlEncodedContent(new List<KeyValuePair<string, string>>());
                             request.Content.Headers.ContentType = new MediaTypeHeaderValue(header.Value);
 
                             break;
@@ -123,7 +119,7 @@ namespace ApigeeSDK.Services
                 }
             }
 
-            HttpResponseMessage response = null;
+            HttpResponseMessage response;
 
             try
             {

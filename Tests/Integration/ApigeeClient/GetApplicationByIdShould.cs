@@ -1,10 +1,11 @@
 ﻿using System;
-using SemanticComparison.Fluent;
-using ApigeeSDK.Models;
 using System.Threading.Tasks;
+using ApigeeSDK.Integration.Tests.Utils;
+using ApigeeSDK.Models;
+using SemanticComparison.Fluent;
 using Xunit;
 
-namespace ApigeeSDK.Unit.Tests
+namespace ApigeeSDK.Integration.Tests.ApigeeClient
 {
     public class GetApplicationByIdShould : ApigeeClientTestsBase
     {

@@ -1,30 +1,31 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using ApigeeSDK.Integration.Tests.ApigeeClient;
 using ApigeeSDK.Services;
 using RichardSzalay.MockHttp;
 using Xunit;
 
-namespace ApigeeSDK.Unit.Tests
+namespace ApigeeSDK.Integration.Tests.TokenProvider
 {
     public class TokenProviderShould : ApigeeClientTestsBase
     {
-        private TokenProvider CreateTokenProvider()
+        private Services.TokenProvider CreateTokenProvider()
         {
-            var http = _mockHttp.ToHttpClient();
+            var http = MockHttp.ToHttpClient();
             var options = new ApigeeClientOptions(Email, Password, OrgName, EnvName, BaseUrl, AuthUrl,
                 TimeSpan.FromSeconds(RequestTimeOut), EntitiesLimit);
             var httpService = new HttpService(http);
 
-            return new TokenProvider(options, httpService);
+            return new Services.TokenProvider(options, httpService);
         }
 
         [Fact]
         public async Task ProvideAccessToken()
         {
-            _mockHttp.Clear();
+            MockHttp.Clear();
 
-            _mockHttp
+            MockHttp
                 .When(AuthUrl)
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -45,9 +46,9 @@ namespace ApigeeSDK.Unit.Tests
         [Fact]
         public async Task DoNotRefreshTokenIfNotExpired()
         {
-            _mockHttp.Clear();
+            MockHttp.Clear();
 
-            var getToken = _mockHttp.When(AuthUrl)
+            var getToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "password")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -59,7 +60,7 @@ namespace ApigeeSDK.Unit.Tests
                         'jti': '00000000-0000-0000-0000-000000000000'
                     }");
 
-            var refreshToken = _mockHttp.When(AuthUrl)
+            var refreshToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "refresh_token")
                 .Respond(HttpStatusCode.OK, "application/json",
         @"{
@@ -80,16 +81,16 @@ namespace ApigeeSDK.Unit.Tests
             Assert.Equal("Authorization", header.Key);
             Assert.Equal("token_type old_token", header.Value);
 
-            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
-            Assert.Equal(0, _mockHttp.GetMatchCount(refreshToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(getToken));
+            Assert.Equal(0, MockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]
         public async Task RefreshTokenIfExpired()
         {
-            _mockHttp.Clear();
+            MockHttp.Clear();
 
-            var getToken = _mockHttp.When(AuthUrl)
+            var getToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "password")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -101,7 +102,7 @@ namespace ApigeeSDK.Unit.Tests
                         'jti': '00000000-0000-0000-0000-000000000000'
                     }");
 
-            var refreshToken = _mockHttp.When(AuthUrl)
+            var refreshToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "refresh_token")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -122,16 +123,16 @@ namespace ApigeeSDK.Unit.Tests
             Assert.Equal("Authorization", header.Key);
             Assert.Equal("token_type new_token", header.Value);
 
-            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
-            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]
         public async Task RefreshTokenIfNotExpiredButForcedByUser()
         {
-            _mockHttp.Clear();
+            MockHttp.Clear();
 
-            var getToken = _mockHttp.When(AuthUrl)
+            var getToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "password")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -143,7 +144,7 @@ namespace ApigeeSDK.Unit.Tests
                         'jti': '00000000-0000-0000-0000-000000000000'
                     }");
 
-            var refreshToken = _mockHttp.When(AuthUrl)
+            var refreshToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "refresh_token")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -164,16 +165,16 @@ namespace ApigeeSDK.Unit.Tests
             Assert.Equal("Authorization", header.Key);
             Assert.Equal("token_type new_token", header.Value);
 
-            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
-            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]
         public async Task RequestNewTokenWhenRefreshedTokenExpired()
         {
-            _mockHttp.Clear();
+            MockHttp.Clear();
 
-            var getToken = _mockHttp.When(AuthUrl)
+            var getToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "password")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -185,7 +186,7 @@ namespace ApigeeSDK.Unit.Tests
                         'jti': '00000000-0000-0000-0000-000000000000'
                     }");
 
-            var refreshToken = _mockHttp.When(AuthUrl)
+            var refreshToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "refresh_token")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -206,16 +207,16 @@ namespace ApigeeSDK.Unit.Tests
             Assert.Equal("Authorization", header.Key);
             Assert.Equal("token_type old_token", header.Value);
 
-            Assert.Equal(2, _mockHttp.GetMatchCount(getToken));
-            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
+            Assert.Equal(2, MockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(refreshToken));
         }
 
         [Fact]
         public async Task DoNotRequestNewTokenWhenRefreshedTokenIsNotExpired()
         {
-            _mockHttp.Clear();
+            MockHttp.Clear();
 
-            var getToken = _mockHttp.When(AuthUrl)
+            var getToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "password")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -227,7 +228,7 @@ namespace ApigeeSDK.Unit.Tests
                         'jti': '00000000-0000-0000-0000-000000000000'
                     }");
 
-            var refreshToken = _mockHttp.When(AuthUrl)
+            var refreshToken = MockHttp.When(AuthUrl)
                 .WithFormData("grant_type", "refresh_token")
                 .Respond(HttpStatusCode.OK, "application/json",
                     @"{
@@ -249,8 +250,8 @@ namespace ApigeeSDK.Unit.Tests
             Assert.Equal("Authorization", header.Key);
             Assert.Equal("token_type new_token", header.Value);
 
-            Assert.Equal(1, _mockHttp.GetMatchCount(getToken));
-            Assert.Equal(1, _mockHttp.GetMatchCount(refreshToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(getToken));
+            Assert.Equal(1, MockHttp.GetMatchCount(refreshToken));
         }
     }
 }

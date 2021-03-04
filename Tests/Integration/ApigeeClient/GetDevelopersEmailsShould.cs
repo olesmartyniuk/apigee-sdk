@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using ApigeeSDK.Integration.Tests.Utils;
 using Xunit;
 
-namespace ApigeeSDK.Unit.Tests
+namespace ApigeeSDK.Integration.Tests.ApigeeClient
 {
     public class GetDevelopersEmailsShould : ApigeeClientTestsBase
     {

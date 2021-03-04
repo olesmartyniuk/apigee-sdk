@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using ApigeeSDK.Exceptions;
 using Xunit;
 
-namespace ApigeeSDK.Integration.Tests
+namespace ApigeeSDK.EndToEnd.Tests
 {
     public class ApiProductsTests
     {        
@@ -23,7 +23,7 @@ namespace ApigeeSDK.Integration.Tests
         }
 
         [Fact]
-        public async Task GetApiProductsIsSuccessfull()
+        public async Task GetApiProductsIsSuccessful()
         {
             await CreateClient().GetApiProducts();
         }
@@ -45,13 +45,13 @@ namespace ApigeeSDK.Integration.Tests
         }
 
         [Fact]
-        public async Task GetGetApiProductsNamesIsSuccessfull()
+        public async Task GetGetApiProductsNamesIsSuccessful()
         {
             await CreateClient().GetApiProductNames();
         }
 
         [Fact]
-        public async Task GetGetApiProductsWithLimitIsSuccessfull()
+        public async Task GetGetApiProductsWithLimitIsSuccessful()
         {
             var email = Environment.GetEnvironmentVariable("APIGEE_EMAIL");
             var password = Environment.GetEnvironmentVariable("APIGEE_PASSWORD");
@@ -61,8 +61,7 @@ namespace ApigeeSDK.Integration.Tests
                 email,
                 password,
                 orgName,
-                envName);
-            options.EntitiesLimit = 2;
+                envName) {EntitiesLimit = 2};
 
             var client = new ApigeeClient(options);
 

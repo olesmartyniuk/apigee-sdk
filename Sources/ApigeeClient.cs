@@ -18,45 +18,36 @@ namespace ApigeeSDK
         private readonly string _organizationName;
         private readonly string _environmentName;
 
-        private readonly HttpClient _http;
-
         private readonly HttpServiceAuthenticated _httpService;        
 
         public ApigeeClient(ApigeeClientOptions options, HttpClient http = null)
         {
             ValidateOptions(options);
 
-            if (http == null)
+            http ??= new HttpClient
             {
-                _http = new HttpClient
-                {
-                    Timeout = options.HttpTimeout
-                };
-            }
-            else
-            {
-                _http = http;
-            }
+                Timeout = options.HttpTimeout
+            };
 
             _organizationName = options.OrgName;
             _environmentName = options.EnvName;
             _baseUrl = options.BaseUrl;            
             _entitiesLimit = options.EntitiesLimit;
-            _httpService = new HttpServiceAuthenticated(options, _http);                                               
+            _httpService = new HttpServiceAuthenticated(options, http);                                               
         }
 
         public async Task<List<string>> GetApplicationIds()
         {
             var url = GetAbsoluteUrl($"apps?rows={_entitiesLimit}");
 
-            return await GetEntitiesByPortions<string>(url, x => x.ToString(), x => JsonConvert.DeserializeObject<List<string>>(x));
+            return await GetEntitiesByPortions(url, x => x.ToString(), JsonConvert.DeserializeObject<List<string>>);
         }
 
         public async Task<List<Application>> GetApplications()
         {
             var url = GetAbsoluteUrl($"apps?expand=true&rows={_entitiesLimit}");
 
-            return await GetEntitiesByPortions<Application>(url, x => x.ApplicationId.ToString(),
+            return await GetEntitiesByPortions(url, x => x.ApplicationId.ToString(),
                 x => JsonConvert.DeserializeObject<ApplicationsList>(x).Applications);
         }
 
@@ -79,28 +70,28 @@ namespace ApigeeSDK
         {
             var url = GetAbsoluteUrl($"developers/{developerEmail}/apps?count={_entitiesLimit}");
 
-            return await GetEntitiesByPortions<string>(url, x => x.ToString(), x => JsonConvert.DeserializeObject<List<string>>(x));
+            return await GetEntitiesByPortions(url, x => x.ToString(), JsonConvert.DeserializeObject<List<string>>);
         }
 
         public async Task<List<string>> GetDevelopersEmails()
         {
             var url = GetAbsoluteUrl($"developers?count={_entitiesLimit}");
 
-            return await GetEntitiesByPortions<string>(url, x => x.ToString(), x => JsonConvert.DeserializeObject<List<string>>(x));
+            return await GetEntitiesByPortions(url, x => x.ToString(), JsonConvert.DeserializeObject<List<string>>);
         }
 
         public async Task<List<Developer>> GetDevelopers()
         {
             var url = GetAbsoluteUrl($"developers?expand=true&count={_entitiesLimit}");
 
-            return await GetEntitiesByPortions<Developer>(url, x => x.Email, x => JsonConvert.DeserializeObject<DevelopersList>(x).Developers);
+            return await GetEntitiesByPortions(url, x => x.Email, x => JsonConvert.DeserializeObject<DevelopersList>(x).Developers);
         }
 
         public async Task<List<Company>> GetCompanies()
         {
             var url = GetAbsoluteUrl($"companies?expand=true&count={_entitiesLimit}");
 
-            return await GetEntitiesByPortions<Company>(url, x => x.Name, x => JsonConvert.DeserializeObject<CompanyList>(x).Companies);
+            return await GetEntitiesByPortions(url, x => x.Name, x => JsonConvert.DeserializeObject<CompanyList>(x).Companies);
         }
 
         public async Task<Developer> GetDeveloper(string developerEmail)
@@ -115,7 +106,7 @@ namespace ApigeeSDK
         {
             var url = GetAbsoluteUrl($"apiproducts?count={_entitiesLimit}");
 
-            return await GetEntitiesByPortions<string>(url, x => x.ToString(), x => JsonConvert.DeserializeObject<List<string>>(x));
+            return await GetEntitiesByPortions(url, x => x.ToString(), JsonConvert.DeserializeObject<List<string>>);
         }
 
         public async Task<List<ApiProduct>> GetApiProducts()
@@ -209,8 +200,6 @@ namespace ApigeeSDK
             };
             var url = GetAbsoluteUrl($"environments/{_environmentName}/apis/{apiName}/deployments");
 
-            var revisions = new List<int>();
-
             try
             {
                 var content = await _httpService.GetAsync(url, headerParams);
@@ -236,7 +225,7 @@ namespace ApigeeSDK
             var all = new List<T>();
             List<T> portion = null;
             string startKey = null;
-            var isFull = false;
+            bool isFull;
             do
             {
                 if (portion != null)
@@ -244,7 +233,7 @@ namespace ApigeeSDK
                     startKey = getKeyFunc(portion.Last());
                 }
 
-                portion = await GetPortionOfEntities<T>(url, startKey, parserFunc);
+                portion = await GetPortionOfEntities(url, startKey, parserFunc);
 
                 all.AddRange(portion);
 
