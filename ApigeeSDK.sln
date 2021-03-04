@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApigeeSDK.Integration.Tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApigeeSDK.EndToEnd.Tests", "Tests\EndToEnd\ApigeeSDK.EndToEnd.Tests.csproj", "{0B45FFCA-A06A-40FE-9117-9F6098B4ED27}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApigeeSDK.Sample", "ApigeeSDK.Sample\ApigeeSDK.Sample.csproj", "{C6EAD9B1-5BF9-43E1-BA5D-D1B7B06A567B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApigeeSDK.Sample", "Sample\ApigeeSDK.Sample.csproj", "{7C50FA09-71FE-4E90-A9B2-BB47B8E1E448}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{0B45FFCA-A06A-40FE-9117-9F6098B4ED27}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B45FFCA-A06A-40FE-9117-9F6098B4ED27}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B45FFCA-A06A-40FE-9117-9F6098B4ED27}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C6EAD9B1-5BF9-43E1-BA5D-D1B7B06A567B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C6EAD9B1-5BF9-43E1-BA5D-D1B7B06A567B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C6EAD9B1-5BF9-43E1-BA5D-D1B7B06A567B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C6EAD9B1-5BF9-43E1-BA5D-D1B7B06A567B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C50FA09-71FE-4E90-A9B2-BB47B8E1E448}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C50FA09-71FE-4E90-A9B2-BB47B8E1E448}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C50FA09-71FE-4E90-A9B2-BB47B8E1E448}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C50FA09-71FE-4E90-A9B2-BB47B8E1E448}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
