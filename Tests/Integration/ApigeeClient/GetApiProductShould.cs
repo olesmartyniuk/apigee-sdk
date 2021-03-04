@@ -1,15 +1,16 @@
-﻿using ApigeeSDK.Models;
-using NUnit.Framework;
-using SemanticComparison.Fluent;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using ApigeeSDK.Integration.Tests.Utils;
+using ApigeeSDK.Models;
+using SemanticComparison.Fluent;
+using Xunit;
 
-namespace ApigeeSDK.Unit.Tests
+namespace ApigeeSDK.Integration.Tests.ApigeeClient
 {
     public class GetApiProductShould : ApigeeClientTestsBase
     {
 
-        [Test]
+        [Fact]
         public async Task ReturnApiProductByNameForValidJson()
         {
             var json = @"{
@@ -61,8 +62,8 @@ namespace ApigeeSDK.Unit.Tests
             };
 
             var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts/{apiProductName}";
-
-            var apigeeService = GetInitializedApigeeService(url, json);
+            RegisterUrl(url, json);
+            var apigeeService = GetApigeeClient();
 
             var apiProduct = await apigeeService.GetApiProduct(apiProductName);
             
@@ -71,12 +72,12 @@ namespace ApigeeSDK.Unit.Tests
                 .Without(x => x.IsPublic)
                 .ShouldEqual(apiProduct);
 
-            Assert.AreEqual(true, apiProduct.IsPublic);
-            Assert.AreEqual(new DateTime(2018, 10, 29, 15, 0, 0), apiProduct.CreatedAtDateTime);
-            Assert.AreEqual(new DateTime(2018, 10, 29, 16, 0, 0), apiProduct.LastModifiedAtDateTime);
+            Assert.True(apiProduct.IsPublic);
+            Assert.Equal(new DateTime(2018, 10, 29, 15, 0, 0), apiProduct.CreatedAtDateTime);
+            Assert.Equal(new DateTime(2018, 10, 29, 16, 0, 0), apiProduct.LastModifiedAtDateTime);
         }
 
-        [Test]
+        [Fact]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
             var invalidJson = @"[
@@ -85,11 +86,10 @@ namespace ApigeeSDK.Unit.Tests
                 ".QuotesToDoubleQuotes();
 
             var apiProductName = "some product name";
+            RegisterUrl(BaseUrl + $"/v1/o/{OrgName}/apiproducts/{apiProductName}", invalidJson);
+            var apigeeService = GetApigeeClient();
 
-            var apigeeService = GetInitializedApigeeService(
-                BaseUrl + $"/v1/o/{OrgName}/apiproducts/{apiProductName}", invalidJson);
-
-            Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
+            Assert.ThrowsAsync<Newtonsoft.Json.JsonException>(async () =>
                 await apigeeService.GetApiProduct(apiProductName));
         }
     }

@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace ApigeeSDK.Exceptions
+﻿namespace ApigeeSDK.Exceptions
 {
-    public class ApigeeSDKTimeoutException : ApigeeSDKException
+    public class ApigeeSdkTimeoutException : ApigeeSdkException
     {
-        public ApigeeSDKTimeoutException(string message) : base(message)
+        public ApigeeSdkTimeoutException(string message) : base(message)
         {
         }
     }

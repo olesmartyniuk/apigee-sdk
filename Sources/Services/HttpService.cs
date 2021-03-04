@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using ApigeeSDK.Exceptions;
 
@@ -13,11 +11,11 @@ namespace ApigeeSDK.Services
 {
     public class HttpService
     {
-        private TimeSpan _requestTimeOut = Timeout.InfiniteTimeSpan;
+        private readonly HttpClient _http;
 
-        public HttpService(ApigeeClientOptions options)
+        public HttpService(HttpClient http)
         {
-            _requestTimeOut = options.HttpTimeout;
+            _http = http;
         }
 
         public virtual async Task<string> PostAsync(string url,
@@ -41,9 +39,9 @@ namespace ApigeeSDK.Services
             var form = new MultipartFormDataContent();
             form.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
 
-            ByteArrayContent fileContent = null;
+            ByteArrayContent fileContent;
 
-            using (FileStream fs = File.OpenRead(filePath))
+            await using (var fs = File.OpenRead(filePath))
             {
                 var streamContent = new StreamContent(fs);
                 fileContent = new ByteArrayContent(await streamContent.ReadAsByteArrayAsync());
@@ -61,7 +59,7 @@ namespace ApigeeSDK.Services
             string json)
         {
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
+
             return await SendAsync(HttpMethod.Post, url, headers, content);
         }
 
@@ -82,7 +80,7 @@ namespace ApigeeSDK.Services
             if (formContent != null)
             {
                 content = new FormUrlEncodedContent(formContent);
-            };
+            }
 
             return await SendAsync(method, url, headers, content);
         }
@@ -107,11 +105,7 @@ namespace ApigeeSDK.Services
                     switch (header.Key.ToLower(CultureInfo.InvariantCulture))
                     {
                         case "content-type":
-                            if (request.Content == null)
-                            {
-                                request.Content = new FormUrlEncodedContent(new List<KeyValuePair<string, string>>());
-                            }
-
+                            request.Content ??= new FormUrlEncodedContent(new List<KeyValuePair<string, string>>());
                             request.Content.Headers.ContentType = new MediaTypeHeaderValue(header.Value);
 
                             break;
@@ -125,26 +119,25 @@ namespace ApigeeSDK.Services
                 }
             }
 
-            HttpResponseMessage response = null;
-            using (var http = new HttpClient())
+            HttpResponseMessage response;
+
+            try
             {
-                try
-                {
-                    http.Timeout = _requestTimeOut;
-                    response = await http.SendAsync(request);
-                }
-                catch (TaskCanceledException e)
-                    when (e.InnerException is IOException && 
-                          e.Source == "System.Net.Http")
-                {
-                    throw new ApigeeSDKTimeoutException("Operation timeout.");
-                }
+                response = await _http.SendAsync(request);
+            }
+            catch (TaskCanceledException e)
+                when (e.InnerException is IOException &&
+                      e.Source == "System.Net.Http")
+            {
+                throw new ApigeeSdkTimeoutException("Operation timeout.");
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                var body = await response.Content.ReadAsStringAsync();
-                throw new ApigeeSDKHttpException(response.StatusCode, body);
+                var body = response.Content != null 
+                    ? await response.Content.ReadAsStringAsync() 
+                    : string.Empty;
+                throw new ApigeeSdkHttpException(response.StatusCode, body);
             }
 
             return await response.Content.ReadAsStringAsync();

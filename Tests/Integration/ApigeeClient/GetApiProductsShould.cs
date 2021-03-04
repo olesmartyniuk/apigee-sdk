@@ -1,27 +1,14 @@
-﻿using ApigeeSDK.Models;
-using NUnit.Framework;
+﻿using System.Threading.Tasks;
+using ApigeeSDK.Integration.Tests.Utils;
+using ApigeeSDK.Models;
 using SemanticComparison.Fluent;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Unity;
+using Xunit;
 
-namespace ApigeeSDK.Unit.Tests
+namespace ApigeeSDK.Integration.Tests.ApigeeClient
 {
-    class GetApiProductsShould : ApigeeClientTestsBase
+    public class GetApiProductsShould : ApigeeClientTestsBase
     {
-        private const int entitiesLimit = 1000;
-
-        [SetUp]
-        protected override void Init()
-        {
-            base.Init();
-
-            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(entitiesLimit);            
-        }
-
-
-        [Test]
+        [Fact]
         public async Task ReturnListOfApiProductsForValidJson()
         {
             var json = @"{
@@ -105,12 +92,13 @@ namespace ApigeeSDK.Unit.Tests
                         ]
                     }";
 
-            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={EntitiesLimit}";
+            RegisterUrl(url, json);
 
-            var apigeeService = GetInitializedApigeeService(url, json);
+            var apigeeService = GetApigeeClient();
             var apiProducts = await apigeeService.GetApiProducts();
 
-            Assert.AreEqual(2, apiProducts.Count);
+            Assert.Equal(2, apiProducts.Count);
 
             new ApiProduct()
             {
@@ -126,7 +114,7 @@ namespace ApigeeSDK.Unit.Tests
                 .Without(x => x.IsPublic)
                 .ShouldEqual(apiProducts[0]);
 
-            Assert.IsTrue(apiProducts[0].IsPublic);
+            Assert.True(apiProducts[0].IsPublic);
 
             new ApiProduct()
             {
@@ -143,24 +131,25 @@ namespace ApigeeSDK.Unit.Tests
                 .Without(x => x.IsPublic)
                 .ShouldEqual(apiProducts[1]);
 
-            Assert.IsFalse(apiProducts[1].IsPublic);
+            Assert.False(apiProducts[1].IsPublic);
         }
 
-        [Test]
+        [Fact]
         public async Task ReturnListOfApiProductsForEmptyJson()
         {
             var json = @"{ ""apiProduct"": [ ] }";
 
-            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={entitiesLimit}";
+            var url = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={EntitiesLimit}";
+            RegisterUrl(url, json);
 
-            var apigeeService = GetInitializedApigeeService(url, json);
+            var apigeeService = GetApigeeClient();
 
             var apiProducts = await apigeeService.GetApiProducts();
 
-            Assert.AreEqual(0, apiProducts.Count);
+            Assert.Empty(apiProducts);
         }
 
-        [Test]
+        [Fact]
         public async Task ReturnListOfApiProductsByPortions()
         {
             var jsonPortion1 = @"{
@@ -193,45 +182,44 @@ namespace ApigeeSDK.Unit.Tests
                               ]
                             }";
 
-            var testEntitiesLimit = 3;
+            EntitiesLimit = 3;
 
-            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={testEntitiesLimit}";
-            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={testEntitiesLimit}&startKey=name3";
+            var urlForPortion1 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={EntitiesLimit}";
+            var urlForPortion2 = BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={EntitiesLimit}&startKey=name3";
 
-            RegisterUrlAndJson(urlForPortion1, jsonPortion1);
-            RegisterUrlAndJson(urlForPortion2, jsonPortion2);
-            _apigeeClientOptionsMock.Setup(x => x.EntitiesLimit).Returns(testEntitiesLimit);
-
-            var apigeeService = Container.Resolve<ApigeeClient>();
+            RegisterUrl(urlForPortion2, jsonPortion2);
+            RegisterUrl(urlForPortion1, jsonPortion1);
+            
+            var apigeeService = GetApigeeClient();
             var apiProducts = await apigeeService.GetApiProducts();
 
-            Assert.AreEqual(4, apiProducts.Count);
+            Assert.Equal(4, apiProducts.Count);
 
-            Assert.AreEqual("name1", apiProducts[0].Name);
-            Assert.AreEqual("one.one@one.com", apiProducts[0].CreatedBy);
+            Assert.Equal("name1", apiProducts[0].Name);
+            Assert.Equal("one.one@one.com", apiProducts[0].CreatedBy);
 
-            Assert.AreEqual("name2", apiProducts[1].Name);
-            Assert.AreEqual("two.two@two.com", apiProducts[1].CreatedBy);
+            Assert.Equal("name2", apiProducts[1].Name);
+            Assert.Equal("two.two@two.com", apiProducts[1].CreatedBy);
 
-            Assert.AreEqual("name3", apiProducts[2].Name);
-            Assert.AreEqual("three.three@three.com", apiProducts[2].CreatedBy);
+            Assert.Equal("name3", apiProducts[2].Name);
+            Assert.Equal("three.three@three.com", apiProducts[2].CreatedBy);
 
-            Assert.AreEqual("name4", apiProducts[3].Name);
-            Assert.AreEqual("four.four@four.com", apiProducts[3].CreatedBy);
+            Assert.Equal("name4", apiProducts[3].Name);
+            Assert.Equal("four.four@four.com", apiProducts[3].CreatedBy);
         }
 
-        [Test]
+        [Fact]
         public void ThrowJsonSerializationExceptionIfJsonIsInvalid()
         {
             var invalidJson = @"[
                     '11111111-1111-1111-1111-111111111
                     '33333333-3333-3333-3333-333333333333'
                 ".QuotesToDoubleQuotes();
-
-            var apigeeService = GetInitializedApigeeService(
-                BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={entitiesLimit}", invalidJson);
+            RegisterUrl(BaseUrl + $"/v1/o/{OrgName}/apiproducts?expand=true&count={EntitiesLimit}", invalidJson);
             
-            Assert.ThrowsAsync(Is.InstanceOf<Newtonsoft.Json.JsonException>(), async () =>
+            var apigeeService = GetApigeeClient();
+            
+            Assert.ThrowsAsync<Newtonsoft.Json.JsonException>(async () =>
                 await apigeeService.GetApiProducts());
         }
     }

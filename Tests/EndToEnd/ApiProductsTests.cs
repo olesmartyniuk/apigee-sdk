@@ -1,18 +1,13 @@
-using NUnit.Framework;
 using System;
 using System.Net;
 using System.Threading.Tasks;
 using ApigeeSDK.Exceptions;
+using Xunit;
 
-namespace ApigeeSDK.Integration.Tests
+namespace ApigeeSDK.EndToEnd.Tests
 {
     public class ApiProductsTests
     {        
-        [SetUp]
-        public void Setup()
-        {            
-        }
-
         private ApigeeClient CreateClient()
         {
             var email = Environment.GetEnvironmentVariable("APIGEE_EMAIL");
@@ -24,43 +19,39 @@ namespace ApigeeSDK.Integration.Tests
                 password,
                 orgName,
                 envName);
-            return ApigeeClient.Create(options);
+            return new ApigeeClient(options);
         }
 
-        [Test]
-        public async Task GetApiProductsIsSuccessfull()
+        [Fact]
+        public async Task GetApiProductsIsSuccessful()
         {
             await CreateClient().GetApiProducts();
-
-            Assert.Pass();
         }
 
-        [Test]
-        public void GetApiProductsWithWrongCredentialsRaiseError()
+        [Fact]
+        public async Task GetApiProductsWithWrongCredentialsRaiseError()
         {
             var options = new ApigeeClientOptions(
                 "WRONG_USER",
                 "WRONG_PASSWORD",
                 "WRONG_ORG",
                 "WRONG_ENV");
-            var client = ApigeeClient.Create(options);
+            var client = new ApigeeClient(options);
 
-            var error = Assert.ThrowsAsync<ApigeeSDKHttpException>(
+            var error = await Assert.ThrowsAsync<ApigeeSdkHttpException>(
                 () => client.GetApiProducts());
-            Assert.That(error.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
-            Assert.That(error.Message, Is.EqualTo("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}"));
+            Assert.Equal(HttpStatusCode.Unauthorized, error.StatusCode);
+            Assert.Equal("{\"error\":\"unauthorized\",\"error_description\":\"Invalid Credentials\"}", error.Message);
         }
 
-        [Test]
-        public async Task GetGetApiProductsNamesIsSuccessfull()
+        [Fact]
+        public async Task GetGetApiProductsNamesIsSuccessful()
         {
             await CreateClient().GetApiProductNames();
-
-            Assert.Pass();
         }
 
-        [Test]
-        public async Task GetGetApiProductsWithLimitIsSuccessfull()
+        [Fact]
+        public async Task GetGetApiProductsWithLimitIsSuccessful()
         {
             var email = Environment.GetEnvironmentVariable("APIGEE_EMAIL");
             var password = Environment.GetEnvironmentVariable("APIGEE_PASSWORD");
@@ -70,14 +61,11 @@ namespace ApigeeSDK.Integration.Tests
                 email,
                 password,
                 orgName,
-                envName);
-            options.EntitiesLimit = 2;
+                envName) {EntitiesLimit = 2};
 
-            var client = ApigeeClient.Create(options);
-            
+            var client = new ApigeeClient(options);
+
             await client.GetApiProducts();
-
-            Assert.Pass();
         }
     }
 }
