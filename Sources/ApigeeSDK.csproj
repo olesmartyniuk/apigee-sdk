@@ -8,7 +8,7 @@
 		<PackageOutputPath>./nupkg</PackageOutputPath>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageId>apigee-sdk</PackageId>
-		<Version>0.8.0-beta1</Version>
+		<Version>0.8.0-beta2</Version>
 		<Authors>alexander.martyniuk@gmail.com</Authors>
 		<PackageTags>Apigee Edge;API;SDK;Google Cloud; API Management</PackageTags>
 		<Description>
