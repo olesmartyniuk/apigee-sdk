@@ -1,11 +1,27 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<AssemblyName>ApigeeSDK</AssemblyName>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>./nupkg</PackageOutputPath>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<PackageId>apigee-sdk</PackageId>
+		<Version>0.8.0-beta1</Version>
+		<Authors>alexander.martyniuk@gmail.com</Authors>
+		<PackageTags>Apigee Edge;API;SDK;Google Cloud; API Management</PackageTags>
+		<Description>
+			.NET binding for Apigee Edge Management API. It allows to manage developers, apis, applications, deployments and much more.
+		</Description>
+		<ProjectUrl>https://github.com/alexmartyniuk/apigee-sdk</ProjectUrl>
+		<IconUrl></IconUrl>
+		<RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+		<None Include="LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
+	</ItemGroup>
 
 </Project>
