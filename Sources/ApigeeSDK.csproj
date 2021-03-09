@@ -8,13 +8,15 @@
 		<PackageOutputPath>./nupkg</PackageOutputPath>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<PackageId>apigee-sdk</PackageId>
-		<Version>0.8.0-beta2</Version>
+		<Version>0.8.0-beta3</Version>
 		<Authors>alexander.martyniuk@gmail.com</Authors>
 		<PackageTags>Apigee Edge;API;SDK;Google Cloud; API Management</PackageTags>
 		<Description>
 			.NET binding for Apigee Edge Management API. It allows to manage developers, apis, applications, deployments and much more.
 		</Description>
-		<ProjectUrl>https://github.com/alexmartyniuk/apigee-sdk</ProjectUrl>
+		<RepositoryUrl>https://github.com/alexmartyniuk/apigee-sdk</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<ProjectUrl></ProjectUrl>
 		<IconUrl></IconUrl>
 		<RequireLicenseAcceptance>false</RequireLicenseAcceptance>
 	</PropertyGroup>
